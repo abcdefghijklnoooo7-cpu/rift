@@ -111315,105 +111315,16 @@ damageBorder.Parent=damageVignette
 local damageAt=0
 local damagePosition
 local clouds={}
-local rifle=Instance.new("Model")
-rifle.Name="RiftRifle"
-local pistol=Instance.new("Model")
-pistol.Name="RiftPistol"
-local views={rifle,pistol}
-local function gun(size,offset,color,model)
- local p=Instance.new("Part"); p.Size=size; p.Color=color; p.Material=Enum.Material.Metal
- p.Anchored=true; p.CanCollide=false; p.CanQuery=false; p.CanTouch=false; p.CastShadow=false
- p.Parent=model or rifle; p:SetAttribute("Offset",offset)
- return p
-end
-local steel=Color3.fromRGB(47,55,65)
-local polymer=Color3.fromRGB(24,30,39)
-local accent=Color3.fromRGB(101,206,182)
-gun(Vector3.new(.32,.34,.87),Vector3.new(0,0,0),steel)
-gun(Vector3.new(.3,.28,.82),Vector3.new(0,.02,-.8),polymer)
-gun(Vector3.new(.12,.12,.47),Vector3.new(0,.03,-1.43),steel)
-gun(Vector3.new(.19,.19,.2),Vector3.new(0,.03,-1.7),polymer)
-gun(Vector3.new(.25,.27,.64),Vector3.new(0,-.02,.71),polymer)
-gun(Vector3.new(.29,.46,.09),Vector3.new(0,-.04,1.06),steel)
-gun(Vector3.new(.2,.44,.28),Vector3.new(0,-.34,-.24),polymer)
-gun(Vector3.new(.19,.35,.2),Vector3.new(0,-.29,.28),polymer)
-gun(Vector3.new(.22,.045,.35),Vector3.new(0,-.32,.07),steel)
-gun(Vector3.new(.23,.05,1.5),Vector3.new(0,.205,-.4),steel)
-gun(Vector3.new(.04,.2,.12),Vector3.new(-.09,.3,.2),polymer)
-gun(Vector3.new(.04,.2,.12),Vector3.new(.09,.3,.2),polymer)
-gun(Vector3.new(.22,.04,.12),Vector3.new(0,.41,.2),steel)
-gun(Vector3.new(.04,.18,.08),Vector3.new(0,.3,-1.05),accent)
-for i=1,8 do
- gun(Vector3.new(.34,.04,.045),Vector3.new(0,.1,-.43-i*.085),steel)
-end
-for _,x in {-1,1} do
- gun(Vector3.new(.018,.055,.45),Vector3.new(x*.165,.02,-.05),accent)
- gun(Vector3.new(.025,.07,.12),Vector3.new(x*.17,-.04,-.25),polymer)
-end
-gun(Vector3.new(.25,.21,.37),Vector3.new(.08,-.39,.3),Color3.fromRGB(65,72,78))
-gun(Vector3.new(.27,.2,.42),Vector3.new(-.05,-.19,-.8),Color3.fromRGB(65,72,78))
-gun(Vector3.new(.25,.23,.68),Vector3.new(0,.08,-.14),steel,pistol)
-gun(Vector3.new(.23,.15,.56),Vector3.new(0,-.07,-.08),polymer,pistol)
-gun(Vector3.new(.21,.35,.22),Vector3.new(0,-.22,.13),polymer,pistol)
-gun(Vector3.new(.23,.055,.26),Vector3.new(0,-.405,.13),steel,pistol)
-gun(Vector3.new(.12,.10,.11),Vector3.new(0,.08,-.50),polymer,pistol)
-gun(Vector3.new(.03,.06,.06),Vector3.new(0,.225,-.40),accent,pistol)
-gun(Vector3.new(.17,.035,.07),Vector3.new(0,.21,.14),steel,pistol)
-gun(Vector3.new(.16,.035,.23),Vector3.new(0,-.21,-.08),steel,pistol)
-for _,side in {-1,1} do
- for notch=1,3 do
-  gun(Vector3.new(.014,.12,.019),Vector3.new(side*.129,.09,.18-notch*.047),polymer,pistol)
+local modelFactory=require(game.ReplicatedStorage:WaitForChild("RiftWeaponModels"))
+local views={}
+local viewIds={}
+local function updateView(slot,id)
+ if viewIds[slot]~=id then
+  if views[slot] then views[slot]:Destroy() end
+  views[slot]=modelFactory.create(weapons[id])
+  viewIds[slot]=id
  end
-end
-
-local function addCylinder(model,length,diameter,offset,color)
- local barrel=gun(Vector3.new(length,diameter,diameter),offset,color,model)
- barrel.Shape=Enum.PartType.Cylinder
- barrel:SetAttribute("Yaw",math.pi/2)
- return barrel
-end
-addCylinder(rifle,.19,.215,Vector3.new(0,.03,-1.79),steel)
-addCylinder(pistol,.13,.125,Vector3.new(0,.085,-.52),steel)
-for index=1,5 do
- gun(Vector3.new(.235,.034,.055),Vector3.new(0,.232,-.51-index*.08),steel)
-end
-for _,side in {-1,1} do
- gun(Vector3.new(.018,.15,.31),Vector3.new(side*.166,-.026,.17),Color3.fromRGB(65,81,91))
- gun(Vector3.new(.015,.09,.23),Vector3.new(side*.128,-.08,-.22),accent,pistol)
-end
-local variantParts={
- [3]={
-  addCylinder(rifle,.38,.17,Vector3.new(0,.03,-2.04),steel),
-  gun(Vector3.new(.24,.11,.34),Vector3.new(0,.28,-.07),polymer,rifle),
-  gun(Vector3.new(.15,.135,.33),Vector3.new(0,.39,-.07),steel,rifle),
- },
- [4]={
-  addCylinder(pistol,.25,.125,Vector3.new(0,.085,-.63),polymer),
-  gun(Vector3.new(.27,.05,.37),Vector3.new(0,.17,-.15),Color3.fromRGB(94,121,80),pistol),
- },
- [5]={
-  gun(Vector3.new(.35,.18,.42),Vector3.new(0,.04,-.85),Color3.fromRGB(46,123,111),rifle),
- },
- [6]={
-  addCylinder(rifle,.62,.25,Vector3.new(0,.03,-1.95),steel),
-  gun(Vector3.new(.37,.21,.54),Vector3.new(0,-.05,-.90),Color3.fromRGB(128,82,49),rifle),
- },
- [7]={
-  addCylinder(rifle,.50,.18,Vector3.new(0,.03,-2.10),steel),
-  addCylinder(rifle,.49,.25,Vector3.new(0,.35,-.09),polymer),
- },
- [8]={
-  addCylinder(pistol,.63,.31,Vector3.new(0,.12,-.37),steel),
-  addCylinder(pistol,.13,.36,Vector3.new(0,.12,-.69),Color3.fromRGB(188,107,49)),
- },
-}
-local lastVariant
-local function updateVariant(id)
- if id==lastVariant then return end
- lastVariant=id
- for variant,parts in variantParts do
-  for _,part in parts do part.Transparency=variant==id and 0 or 1 end
- end
+ return views[slot]
 end
 
 local function sound(name,id,volume,speed)
@@ -111680,10 +111591,9 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
   elseif (cloud.Position-cam.CFrame.Position).Magnitude<11 then inside=true end
  end
  fog.BackgroundTransparency=inside and .04 or 1
- local view=views[equipped]
- updateVariant(weaponId(equipped))
+ local view=updateView(equipped,weaponId(equipped))
  local showWeapon=alive and not menuOpen and P:GetAttribute("RiftDuelPhase")~="Voting"
- for _,model in views do
+ for _,model in pairs(views) do
   local parent=showWeapon and model==view and cam or nil
   if model.Parent~=parent then model.Parent=parent end
  end
@@ -111737,6 +111647,7 @@ local action=storage:WaitForChild("RiftAction")
 local queue=storage:WaitForChild("RiftQueue")
 local weapons=require(storage:WaitForChild("RiftWeapons"))
 local UI=require(storage:WaitForChild("RiftUI"))
+local Models=require(storage:WaitForChild("RiftWeaponModels"))
 local C=UI.C
 local click=Instance.new("Sound"); click.Name="RiftMenuClick"; click.SoundId="rbxasset://sounds/volume_slider.ogg"; click.Volume=.1; click.PlaybackSpeed=1.4; click.Parent=game:GetService("SoundService")
 local gui=Instance.new("ScreenGui"); gui.Name="RiftSettings"; gui.ResetOnSpawn=false; gui.DisplayOrder=30; gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets; gui.Parent=player:WaitForChild("PlayerGui")
@@ -111823,24 +111734,31 @@ UI.frame(arsenal,"ColumnDivider",354,78,1,320,C.border)
 local selected=player:GetAttribute("RiftPrimary") or 1
 local weaponName=UI.text(arsenal,"",386,78,478,32,22,C.text,true)
 local classLabel=UI.text(arsenal,"",386,114,478,22,12,C.accent)
-local description=UI.text(arsenal,"",386,150,478,58,14,C.muted); description.TextWrapped=true; description.TextYAlignment=Enum.TextYAlignment.Top
+local preview=Instance.new("ViewportFrame"); preview.Name="WeaponPreview"; preview.Position=UDim2.fromOffset(386,142); preview.Size=UDim2.fromOffset(478,92); preview.BackgroundTransparency=1; preview.Ambient=Color3.fromRGB(185,185,185); preview.LightColor=Color3.fromRGB(255,244,225); preview.LightDirection=Vector3.new(-1,-1,-1); preview.Parent=arsenal
+local previewCamera=Instance.new("Camera"); previewCamera.FieldOfView=34; previewCamera.CFrame=CFrame.lookAt(Vector3.new(3.8,1.1,-1.7),Vector3.new(0,0,-.35)); previewCamera.Parent=preview; preview.CurrentCamera=previewCamera
+local previewId,previewModel
+local description=UI.text(arsenal,"",386,240,478,42,12,C.muted); description.TextWrapped=true; description.TextYAlignment=Enum.TextYAlignment.Top
 local statValues={}
 for i,title in {"DAMAGE","FIRE RATE","MAGAZINE","RELOAD"} do
- local x=386+((i-1)%2)*242; local y=222+math.floor((i-1)/2)*60
- UI.text(arsenal,title,x,y,220,16,10,C.muted)
- statValues[i]=UI.text(arsenal,"",x,y+19,220,26,18,C.text,true)
+ local x=386+(i-1)*120; local y=294
+ UI.text(arsenal,title,x,y,116,16,10,C.muted)
+ statValues[i]=UI.text(arsenal,"",x,y+19,116,26,15,C.text,true)
 end
 local equip
 local rows={}
 local function refreshWeapon()
  local w=weapons[selected]
+ if previewId~=selected then
+  if previewModel then previewModel:Destroy() end
+  previewModel=Models.create(w); previewModel.Parent=preview; previewId=selected
+ end
  local slot=table.find(weapons.Loadouts[1],selected) and 1 or 2
  local attr=slot==1 and "RiftPrimary" or "RiftSecondary"
  local equipped=(player:GetAttribute(attr) or slot)==selected
  weaponName.Text=w.name
  classLabel.Text=(slot==1 and "PRIMARY" or "SECONDARY").."  /  "..(w.class or w.short):upper()
  description.Text=w.description or (w.automatic and "Automatic fire for sustained pressure. Manage your spread and commit to short, accurate bursts." or "Deliberate shots reward precision. Aim down sights for the tightest spread.")
- statValues[1].Text=tostring(w.bodyDamage)..(w.pellets and " × "..w.pellets or "").." / body"
+ statValues[1].Text=tostring(w.bodyDamage)..(w.pellets and " × "..w.pellets or "").." HP"
  statValues[2].Text=math.round(60/w.shotInterval).." RPM"
  statValues[3].Text=w.magazine.." rounds"
  statValues[4].Text=string.format("%.2fs",w.reloadTime)
@@ -112731,6 +112649,90 @@ end)
 			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			<UniqueId name="UniqueId">3c83a70e7eb853630afca5dc000003bf</UniqueId>
 		</Properties>
+<Item class="ModuleScript" referent="RBXRiftWeaponModels"><Properties><string name="Name">RiftWeaponModels</string><ProtectedString name="Source"><![CDATA[-- Native, low-part-count geometry shared by first-person and arsenal previews.
+local Models={}
+function Models.create(weapon)
+ local model=Instance.new("Model"); model.Name=weapon.name
+ local steel=Color3.fromRGB(76,79,81)
+ local dark=Color3.fromRGB(34,37,39)
+ local finish=({Color3.fromRGB(136,119,94),Color3.fromRGB(105,119,111),Color3.fromRGB(123,128,133)})[(weapon.finish or 0)+1]
+ local function part(name,size,offset,color,cylinder)
+  local p=Instance.new("Part"); p.Name=name; p.Size=size; p.Color=color or dark; p.Material=Enum.Material.Metal
+  p.Anchored=true; p.CanCollide=false; p.CanTouch=false; p.CanQuery=false; p.CastShadow=false
+  local yaw=cylinder and math.pi/2 or 0
+  if cylinder then p.Shape=Enum.PartType.Cylinder end
+  p:SetAttribute("Offset",offset); p:SetAttribute("Yaw",yaw)
+  p.CFrame=CFrame.new(offset)*CFrame.Angles(0,yaw,0); p.Parent=model; return p
+ end
+ local function block(name,x,y,z,px,py,pz,color) return part(name,Vector3.new(x,y,z),Vector3.new(px,py,pz),color) end
+ local function tube(name,length,width,x,y,z,color) return part(name,Vector3.new(length,width,width),Vector3.new(x,y,z),color,true) end
+ local family=weapon.family
+ local small=family=="pistol" or family=="revolver"
+ if small then
+  block("Slide",.25,.22,.78,0,.05,-.16,finish)
+  block("Frame",.23,.12,.64,0,-.10,-.1,dark)
+  block("Grip",.22,.38,.26,0,-.29,.12,dark)
+  block("Magazine base",.25,.045,.29,0,-.49,.12,steel)
+  tube("Barrel",.23,.12,0,.055,-.57,steel)
+  block("Trigger guard",.16,.035,.25,0,-.24,-.12,steel)
+  block("Rear sight",.19,.045,.08,0,.19,.15,dark)
+  block("Front sight",.035,.06,.065,0,.2,-.48,finish)
+  if family=="revolver" then
+   tube("Cylinder",.30,.37,0,-.02,-.07,steel)
+   tube("Long barrel",.48,.15,0,.055,-.78,finish)
+  elseif weapon.automatic then
+   block("Extended magazine",.19,.24,.20,0,-.55,.12,dark)
+  elseif weapon.bodyDamage>35 then
+   tube("Compensator",.20,.21,0,.05,-.70,steel)
+  end
+  for _,side in {-1,1} do block("Grip inset",.018,.23,.17,side*.12,-.3,.13,finish) end
+ elseif family=="launcher" then
+  tube("Launch tube",1.55,.55,0,.03,-.58,finish)
+  tube("Muzzle rim",.10,.61,0,.03,-1.39,steel)
+  tube("Muzzle bore",.105,.44,0,.03,-1.45,dark)
+  block("Rear housing",.4,.35,.45,0,0,.35,dark)
+  block("Grip",.22,.4,.25,0,-.32,.27,dark)
+  block("Foregrip",.18,.32,.22,0,-.36,-.65,dark)
+  block("Leaf sight",.04,.24,.16,.13,.39,-.32,steel)
+  if weapon.magazine>1 then tube("Drum",.42,.66,0,-.3,-.1,steel) end
+ else
+  local compact=family=="smg"
+  local long=family=="sniper" or family=="marksman"
+  local barrel=long and .84 or (compact and .22 or .42)
+  block("Receiver",.31,.31,.86,0,0,0,finish)
+  block("Handguard",.29,.26,compact and .45 or .75,0,0,-.72,dark)
+  tube("Barrel",barrel,.12,0,.02,-1.12-barrel/2,steel)
+  tube("Muzzle",.14,.18,0,.02,-1.16-barrel,steel)
+  block("Stock spine",.16,.14,.55,0,.04,.68,steel)
+  block("Stock",.27,.31,.43,0,-.04,.89,dark)
+  block("Butt pad",.3,.4,.08,0,-.07,1.14,dark)
+  block("Pistol grip",.19,.39,.23,0,-.31,.25,dark)
+  block("Trigger guard",.2,.035,.28,0,-.27,.02,steel)
+  block("Top rail",.21,.04,1.3,0,.18,-.26,steel)
+  if family=="lmg" then block("Box magazine",.55,.46,.5,0,-.38,-.2,dark)
+  elseif family=="shotgun" then
+   tube("Magazine tube",.82,.14,0,-.14,-.93,steel)
+   block("Pump",.36,.25,.46,0,-.04,-.85,finish)
+  else block("Magazine",.20,compact and .52 or .41,.28,0,-.35,-.22,dark) end
+  if long then
+   block("Scope mount",.2,.09,.36,0,.24,-.10,dark)
+   tube("Optic",.6,family=="sniper" and .27 or .20,0,.38,-.10,dark)
+   tube("Lens",.018,family=="sniper" and .22 or .15,0,.38,-.411,Color3.fromRGB(79,106,112))
+  else
+   block("Rear sight left",.035,.14,.10,-.09,.27,.17,dark)
+   block("Rear sight right",.035,.14,.10,.09,.27,.17,dark)
+   block("Sight bridge",.21,.03,.10,0,.35,.17,dark)
+   block("Front sight",.03,.13,.06,0,.27,-.96,finish)
+  end
+  for _,side in {-1,1} do
+   block("Receiver inset",.018,.10,.35,side*.162,.015,.05,steel)
+   block("Vent",.018,.045,.38,side*.151,.06,-.74,steel)
+  end
+ end
+ return model
+end
+return Models
+]]></ProtectedString></Properties></Item>
 <Item class="ModuleScript" referent="RBXRiftUI"><Properties><string name="Name">RiftUI</string><ProtectedString name="Source"><![CDATA[-- Shared visual language; no gameplay state is owned here.
 local Tween=game:GetService("TweenService")
 local UI={}
@@ -112788,14 +112790,59 @@ return UI
  {name="Breach Shotgun", short="Shotgun", model="rifle", magazine=5, shotInterval=.66, reloadTime=1.8, automatic=false, range=115, bodyDamage=14, headMultiplier=1.45, hip=5.7, ads=3.7, zoom=.85, recoil=.28, pitchKick=3.0, pellets=8, shotSound="rbxassetid://71816202649396", soundPitch=1},
  {name="Horizon Sniper", short="Sniper", model="rifle", magazine=4, shotInterval=1.0, reloadTime=1.9, automatic=false, range=650, bodyDamage=78, headMultiplier=1.8, hip=4.2, ads=.065, zoom=.48, recoil=.34, pitchKick=3.25, shotSound="rbxassetid://9118173988", soundPitch=1.1},
  {name="Arc Launcher", short="Launcher", model="pistol", magazine=1, shotInterval=.92, reloadTime=1.85, automatic=false, range=100, bodyDamage=62, headMultiplier=1, hip=1.3, ads=.6, zoom=.9, recoil=.29, pitchKick=2.65, blastRadius=13, shotSound="rbxasset://sounds/impact_explosion_03.mp3", soundPitch=2.4},
+ {name="Spectre SMG",short="Spectre",family="smg",magazine=24,shotInterval=0.085,reloadTime=1.12,automatic=true,range=240,bodyDamage=22,headMultiplier=1.8,hip=1.6,ads=0.5,zoom=0.86,recoil=0.1,pitchKick=0.72,shotSound="rbxassetid://72591590550768",soundPitch=1.3},
+ {name="Talon Rifle",short="Talon",family="rifle",magazine=30,shotInterval=0.13,reloadTime=1.55,automatic=true,range=460,bodyDamage=36,headMultiplier=2.2,hip=1.5,ads=0.38,zoom=0.78,recoil=0.17,pitchKick=1.3,shotSound="rbxassetid://72591590550768",soundPitch=0.88},
+ {name="Anchor LMG",short="Anchor",family="lmg",magazine=60,shotInterval=0.12,reloadTime=2.8,automatic=true,range=400,bodyDamage=28,headMultiplier=1.8,hip=2.7,ads=0.85,zoom=0.82,recoil=0.18,pitchKick=1.25,shotSound="rbxassetid://72591590550768",soundPitch=0.78},
+ {name="Needle PDW",short="Needle",family="smg",magazine=36,shotInterval=0.06,reloadTime=1.6,automatic=true,range=165,bodyDamage=15,headMultiplier=1.6,hip=2.4,ads=0.82,zoom=0.9,recoil=0.07,pitchKick=0.5,shotSound="rbxassetid://72591590550768",soundPitch=1.55},
+ {name="Hammer Shotgun",short="Hammer",family="shotgun",magazine=2,shotInterval=0.85,reloadTime=1.4,automatic=false,range=95,bodyDamage=17,headMultiplier=1.25,hip=6,ads=4.5,zoom=0.86,recoil=0.36,pitchKick=3.7,shotSound="rbxassetid://71816202649396",soundPitch=0.78,pellets=9},
+ {name="Vector DMR",short="Vector",family="marksman",magazine=12,shotInterval=0.3,reloadTime=1.5,automatic=false,range=600,bodyDamage=49,headMultiplier=2.05,hip=1.6,ads=0.15,zoom=0.68,recoil=0.22,pitchKick=1.9,shotSound="rbxassetid://72591590550768",soundPitch=0.72},
+ {name="Sentinel Sniper",short="Sentinel",family="sniper",magazine=6,shotInterval=0.68,reloadTime=2.2,automatic=false,range=600,bodyDamage=60,headMultiplier=1.75,hip=4.5,ads=0.09,zoom=0.55,recoil=0.26,pitchKick=2.7,shotSound="rbxassetid://72591590550768",soundPitch=0.86},
+ {name="Warden Revolver",short="Warden",family="revolver",magazine=6,shotInterval=0.42,reloadTime=1.7,automatic=false,range=320,bodyDamage=46,headMultiplier=2.2,hip=1.5,ads=0.3,zoom=0.82,recoil=0.26,pitchKick=2.2,shotSound="rbxassetid://98975838871911",soundPitch=0.8},
+ {name="Ember Auto Pistol",short="Ember",family="pistol",magazine=20,shotInterval=0.095,reloadTime=1.2,automatic=true,range=150,bodyDamage=16,headMultiplier=1.65,hip=2.5,ads=0.95,zoom=0.91,recoil=0.09,pitchKick=0.65,shotSound="rbxassetid://98975838871911",soundPitch=1.45},
+ {name="Kestrel Heavy Pistol",short="Kestrel",family="pistol",magazine=8,shotInterval=0.34,reloadTime=1.25,automatic=false,range=330,bodyDamage=39,headMultiplier=2.3,hip=1.6,ads=0.35,zoom=0.84,recoil=0.24,pitchKick=1.8,shotSound="rbxassetid://98975838871911",soundPitch=0.88},
+ {name="Nova Launcher",short="Nova",family="launcher",magazine=2,shotInterval=1.1,reloadTime=2.5,automatic=false,range=160,bodyDamage=72,headMultiplier=1,hip=2,ads=0.85,zoom=0.86,recoil=0.38,pitchKick=3.2,shotSound="rbxasset://sounds/impact_explosion_03.mp3",soundPitch=1.8,blastRadius=15},
+ {name="Drift Auto Shotgun",short="Drift",family="shotgun",magazine=8,shotInterval=0.38,reloadTime=2.2,automatic=true,range=90,bodyDamage=10,headMultiplier=1.3,hip=6.8,ads=4.5,zoom=0.9,recoil=0.21,pitchKick=2.1,shotSound="rbxassetid://71816202649396",soundPitch=1.2,pellets=7},
 }
 
-weapons.Loadouts = {{1,3,5,6,7},{2,4,8}}
+weapons.Loadouts = {{1,3,5,6,7,9,10,11,12,13,14,15,19,20},{2,4,8,16,17,18}}
 weapons.Kits = {
  {name="Vanguard", omitted="recon"},
  {name="Sentinel", omitted="flash"},
  {name="Scout", omitted="smoke"},
 }
+
+local families={"rifle","pistol","marksman","pistol","smg","shotgun","sniper","launcher"}
+local classes={rifle="Assault rifle",pistol="Pistol",marksman="Marksman",smg="SMG",shotgun="Shotgun",sniper="Sniper",launcher="Explosive",lmg="LMG",revolver="Revolver"}
+local descriptions={
+ "A balanced assault rifle. Controlled bursts reward accurate mid-range tracking.",
+ "A reliable sidearm. Quick reloads and accurate single shots rescue a dry primary.",
+ "A light precision carbine. Pace your shots for consistent mid-range damage.",
+ "A fast-trigger sidearm with a generous magazine. Strong close-range follow-up.",
+ "A mobile close-range automatic. Track targets and close the distance.",
+ "A pump shotgun with a tight aimed pattern. Commit to close-range engagements.",
+ "A heavy bolt-action profile. One clean headshot ends the fight; missed shots cost time.",
+ "A single-shot explosive sidearm. Splash checks nearby cover; walls block the blast.",
+ "A controlled SMG for short bursts. Trades peak fire rate for precision and handling.",
+ "A hard-hitting automatic rifle. Slower cadence and heavier kick reward recoil control.",
+ "A sustained-fire support weapon. Large magazine, long reload, and wider spread.",
+ "A rapid-fire personal defence weapon. Excellent tracking up close; weak at distance.",
+ "A two-shell breacher. Very high close-range damage with little room for mistakes.",
+ "A semi-automatic precision rifle. Steady aim rewards headshots at long range.",
+ "A lighter sniper with faster follow-up shots. Lower body damage demands precision.",
+ "A six-shot revolver. High-impact rounds and a deliberate trigger rhythm.",
+ "An automatic backup pistol. Emergency firepower with short reach and strong spread.",
+ "A heavy precision pistol. Eight rounds with strong headshot potential.",
+ "A two-shot launcher. Wider splash and a slow reload; cover still protects opponents.",
+ "A close-range automatic shotgun. Sustained pressure with less damage per shell.",
+}
+for id,weapon in ipairs(weapons) do
+ weapon.family=weapon.family or families[id]
+ weapon.class=classes[weapon.family]
+ weapon.description=descriptions[id]
+ weapon.model=(weapon.family=="pistol" or weapon.family=="revolver") and "pistol" or "rifle"
+ weapon.finish=id%3
+end
+
 weapons.ReloadSound = "rbxassetid://117963160131194"
 return weapons
 ]]></ProtectedString>
