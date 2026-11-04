@@ -111271,7 +111271,7 @@ rounded(staminaTrack,5)
 local staminaFill=Instance.new("Frame")
 staminaFill.Name="StaminaFill"
 staminaFill.Size=UDim2.fromScale(1,1)
-staminaFill.BackgroundColor3=C.muted
+staminaFill.BackgroundColor3=C.blue
 staminaFill.BorderSizePixel=0
 staminaFill.Parent=staminaTrack
 rounded(staminaFill,5)
@@ -111569,12 +111569,14 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
   local name=weapons[weaponId(slot)].short
   chip.Text=slot.."  "..name:upper()
   chip.BackgroundColor3=slot==equipped and C.hover or C.bg
+  chip.TextColor3=slot==equipped and C.yellow or C.muted
   chip.BackgroundTransparency=slot==equipped and .06 or .23
  end
  for key,action in keys do
   local seconds=math.ceil((ready[action] or 0)-now)
   local allowed=kitAllows(action)
   slots[action].Text=key.."  "..string.upper(action)..(seconds>0 and ("  "..seconds.."s") or "")
+  slots[action].TextColor3=allowed and C.purple or C.muted
   slots[action].TextTransparency=allowed and 0 or .64
   slots[action].BackgroundTransparency=allowed and .23 or .62
  end
@@ -111651,16 +111653,20 @@ local Models=require(storage:WaitForChild("RiftWeaponModels"))
 local C=UI.C
 local click=Instance.new("Sound"); click.Name="RiftMenuClick"; click.SoundId="rbxasset://sounds/volume_slider.ogg"; click.Volume=.1; click.PlaybackSpeed=1.4; click.Parent=game:GetService("SoundService")
 local gui=Instance.new("ScreenGui"); gui.Name="RiftSettings"; gui.ResetOnSpawn=false; gui.DisplayOrder=30; gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets; gui.Parent=player:WaitForChild("PlayerGui")
-local shade=UI.frame(gui,"Backdrop",0,0,0,0,C.bg); shade.Size=UDim2.fromScale(1,1); shade.BackgroundTransparency=.28; shade.Visible=false
-local panel=UI.frame(shade,"Menu",0,0,920,560,C.bg); panel.Position=UDim2.fromScale(.5,.5); panel.AnchorPoint=Vector2.new(.5,.5); UI.surface(panel)
+local shade=UI.frame(gui,"Backdrop",0,0,0,0,C.bg); shade.Size=UDim2.fromScale(1,1); shade.BackgroundTransparency=.72; shade.Visible=false
+local panel=UI.frame(shade,"Menu",0,0,920,560,C.bg); panel.Position=UDim2.fromScale(.5,.5); panel.AnchorPoint=Vector2.new(.5,.5); UI.surface(panel); panel.BackgroundTransparency=.07
 local scale=Instance.new("UIScale"); scale.Parent=panel
 UI.text(panel,"RIFT",28,16,90,32,22,C.text,true)
 local context=UI.text(panel,"COMPETITIVE / FPS",126,16,420,32,11,C.muted)
 local opened=false
+local homeOpen=false
+local home
+local practiceVisited=false
+local loadoutEdited=false
 local pageName="Play"
 local pages,nav={},{}
 local function setOpen(value)
- opened=value; shade.Visible=value; player:SetAttribute("RiftMenuOpen",value)
+ opened=value; shade.Visible=value; player:SetAttribute("RiftMenuOpen",value or homeOpen)
 end
 local function showPage(name)
  pageName=name
@@ -111669,8 +111675,13 @@ end
 local function button(parent,caption,x,y,w,h,callback,primary)
  return UI.button(parent,caption,x,y,w,h,function() click:Play(); callback() end,primary)
 end
-local closer=button(panel,"Resume  [M]",756,18,136,32,function() setOpen(false) end); closer.Modal=true
-local opener=button(gui,"Menu  [M]",20,18,112,32,function() setOpen(not opened) end)
+local closer=button(panel,"Back  [M]",756,18,136,32,function() setOpen(false) end); closer.Modal=true
+local function toggle()
+ if opened then setOpen(false)
+ elseif player:GetAttribute("RiftMap")=="Lobby" and not player:GetAttribute("RiftDuelPhase") then homeOpen=not homeOpen; setOpen(false)
+ else showPage("Settings"); setOpen(true) end
+end
+local opener=button(gui,"Menu  [M]",20,18,112,32,toggle)
 for i,name in {"Play","Arsenal","Abilities","Settings"} do
  nav[name]=button(panel,name,28+(i-1)*128,64,116,34,function() showPage(name) end)
  nav[name].Name="Nav"..name
@@ -111709,7 +111720,7 @@ UI.text(play,"Practice before you play",0,302,490,24,16,C.text,true)
 UI.text(play,"Open range, movement course, and respawning targets.",0,332,498,24,13,C.muted)
 button(play,"Enter training range  →",0,368,498,30,function()
  if player:GetAttribute("RiftDuelId") or player:GetAttribute("RiftQueued") then return end
- travel:FireServer("Training Arena"); setOpen(false)
+ homeOpen=false; travel:FireServer("Training Arena"); setOpen(false)
 end)
 UI.frame(play,"ColumnDivider",538,0,1,398,C.border)
 UI.text(play,"YOUR LOADOUT",574,4,280,24,11,C.muted)
@@ -111721,7 +111732,7 @@ UI.text(play,"PRACTICE DESTINATIONS",574,204,290,24,11,C.muted)
 for i,name in {"Pine Ridge","Red Mesa","Metro District","Dockyard"} do
  button(play,name.."  →",574,240+(i-1)*39,290,32,function()
   if player:GetAttribute("RiftDuelId") or player:GetAttribute("RiftQueued") then return end
-  travel:FireServer(name); setOpen(false)
+  homeOpen=false; travel:FireServer(name); setOpen(false)
  end)
 end
 local arsenal=pages.Arsenal
@@ -111832,25 +111843,144 @@ local function refresh()
  for i,b in kitButtons do UI.select(b,i==(player:GetAttribute("RiftKit") or 1)); b.Active=editable() end
  refreshWeapon()
 end
-for _,attribute in {"RiftPrimary","RiftSecondary","RiftKit","RiftMap","RiftQueued","RiftQueueSize","RiftDuelPhase"} do player:GetAttributeChangedSignal(attribute):Connect(refresh) end
-for size=1,3 do workspace:GetAttributeChangedSignal("RiftQueueCount"..size):Connect(refresh) end
-player:GetAttributeChangedSignal("RiftDuelPhase"):Connect(function() if player:GetAttribute("RiftDuelPhase")=="Voting" then setOpen(false) end end)
-input.InputBegan:Connect(function(key,processed)
- if processed then return end
- if key.KeyCode==Enum.KeyCode.M then setOpen(not opened) end
+-- Lobby UI floats around the 3D space; other pages reuse the overlay.
+home=UI.frame(gui,"LobbyInterface",0,0,0,0)
+home.Size=UDim2.fromScale(1,1); home.BackgroundTransparency=1
+local function dock(name,x,y,ax,ay,w,h)
+ local f=UI.frame(home,name,0,0,w,h,C.bg)
+ f.Position=UDim2.new(x,ax==0 and 18 or (ax==1 and -18 or 0),y,ay==1 and -18 or 18)
+ f.AnchorPoint=Vector2.new(ax,ay); f.BackgroundTransparency=.19; UI.corner(f,5)
+ local dockScale=Instance.new("UIScale"); dockScale.Parent=f
+ return f,dockScale
+end
+local match,matchScale=dock("Matchmaking",.5,0,.5,0,420,132)
+local header=UI.text(match,"FIND A MATCH",16,8,388,22,14,C.yellow,true)
+header.TextXAlignment=Enum.TextXAlignment.Center
+local homeModes={}
+for size=1,3 do
+ homeModes[size]=button(match,size.."v"..size,16+(size-1)*132,36,124,32,function()
+  if not editable() then return end
+  mode=size
+  player:SetAttribute("RiftSelectedMode",size)
+  queue:FireServer("mode",size)
+ end)
+end
+local find=button(match,"Play",16,78,190,36,function()
+ if player:GetAttribute("RiftMap")=="Lobby" and not player:GetAttribute("RiftDuelId") then queue:FireServer("queue",mode) end
+end,true)
+find.Modal=true
+local lobbyQueue=UI.text(match,"",222,78,186,36,12,C.muted,true)
+local goals,goalsScale=dock("FieldBrief",0,.19,0,0,232,170)
+UI.text(goals,"FIELD BRIEF",14,8,204,23,15,C.purple,true)
+UI.text(goals,"Session objectives",14,36,204,18,12,C.muted)
+local progressTrack=UI.frame(goals,"Progress",14,65,204,5,C.surface)
+local progressFill=UI.frame(progressTrack,"Fill",0,0,0,5,C.purple)
+local objectives={}
+for i,label in {"Visit the training range","Equip a different weapon","Win a match"} do
+ objectives[i]=UI.text(goals,label,14,76+(i-1)*26,204,22,12,C.text,true)
+end
+local ranks,ranksScale=dock("SessionLeaderboard",1,.19,1,0,232,170)
+UI.text(ranks,"SESSION LEADERS",14,8,204,23,15,C.blue,true)
+UI.text(ranks,"PLAYER                      WINS",14,36,204,20,10,C.muted,true)
+local leaders={}
+for i=1,3 do
+ local name=UI.text(ranks,"",14,62+(i-1)*24,156,21,12,C.text,true)
+ name.TextTruncate=Enum.TextTruncate.AtEnd
+ local wins=UI.text(ranks,"",177,62+(i-1)*24,40,21,12,C.yellow,true)
+ wins.TextXAlignment=Enum.TextXAlignment.Right
+ leaders[i]={name,wins}
+end
+local identity=UI.text(ranks,"",14,140,204,18,10,C.muted); identity.TextTruncate=Enum.TextTruncate.AtEnd
+local dockNav,navScale=dock("LobbyNavigation",.5,1,.5,1,630,62)
+local navItems={{"PLAY",C.accent},{"ARSENAL",C.purple},{"TRAINING",C.yellow},{"ABILITIES",C.blue},{"SETTINGS",C.muted}}
+for i,item in navItems do
+ local b=button(dockNav,item[1],8+(i-1)*124,8,118,46,function()
+  if i==1 then showPage("Play"); setOpen(true)
+  elseif i==3 then
+   if not editable() then return end
+   homeOpen=false; travel:FireServer("Training Arena"); setOpen(false)
+  else showPage(i==2 and "Arsenal" or (i==4 and "Abilities" or "Settings")); setOpen(true) end
+ end)
+ b.TextColor3=item[2]
+ UI.frame(b,"Accent",13,38,92,2,item[2]).BackgroundTransparency=.35
+end
+local notice=UI.text(home,"",0,0,500,24,12,C.muted,true)
+notice.Position=UDim2.new(.5,0,1,-84); notice.AnchorPoint=Vector2.new(.5,1); notice.TextXAlignment=Enum.TextXAlignment.Center
+local function refreshLobby()
+ local queued=player:GetAttribute("RiftQueued")==true
+ local size=queued and (player:GetAttribute("RiftQueueSize") or mode) or mode
+ local count=workspace:GetAttribute("RiftQueueCount"..size) or 0
+ find.Text=queued and "Leave queue" or "Find match"
+ lobbyQueue.Text=string.format("%d / %d queued",count,size*2)
+ for i,b in homeModes do UI.select(b,i==size); b.Active=editable() end
+ local wins=player:GetAttribute("RiftMatchWins") or 0
+ local completed={practiceVisited,loadoutEdited,wins>0}
+ local total=0
+ for i,done in completed do
+  if done then total+=1 end
+  local label=({"Visit the training range","Equip a different weapon","Win a match"})[i]
+  objectives[i].Text=(done and "✓  " or "•  ")..label
+  objectives[i].TextColor3=done and C.accent or C.text
+ end
+ progressFill.Size=UDim2.fromScale(total/3,1)
+ notice.Text=queued and ("Searching for a "..size.."v"..size.." match") or (total==3 and "Field brief complete  ·  M to explore" or "M to explore the lobby")
+ notice.TextColor3=queued and C.yellow or C.muted
+ identity.Text=player.DisplayName.."   /   "..wins.." session wins"
+ local all=game.Players:GetPlayers()
+ table.sort(all,function(a,b)
+  local aw,bw=a:GetAttribute("RiftMatchWins") or 0,b:GetAttribute("RiftMatchWins") or 0
+  if aw==bw then return a.UserId<b.UserId end
+  return aw>bw
+ end)
+ for i,row in leaders do
+  local p=all[i]
+  row[1].Text=p and p.DisplayName or "—"
+  row[2].Text=p and tostring(p:GetAttribute("RiftMatchWins") or 0) or ""
+ end
+end
+local function refreshAll()
+ refresh()
+ refreshLobby()
+end
+for _,attribute in {"RiftPrimary","RiftSecondary","RiftKit","RiftQueued","RiftQueueSize","RiftDuelPhase","RiftMatchWins"} do
+ player:GetAttributeChangedSignal(attribute):Connect(function()
+  if attribute=="RiftPrimary" or attribute=="RiftSecondary" then loadoutEdited=true end
+  refreshAll()
+ end)
+end
+for size=1,3 do workspace:GetAttributeChangedSignal("RiftQueueCount"..size):Connect(refreshAll) end
+player:GetAttributeChangedSignal("RiftMap"):Connect(function()
+ local map=player:GetAttribute("RiftMap")
+ if map=="Training Arena" then practiceVisited=true end
+ homeOpen=map=="Lobby" and not player:GetAttribute("RiftDuelPhase")
+ setOpen(false); refreshAll()
 end)
-player:GetAttributeChangedSignal("RiftSelectedMode"):Connect(function() mode=player:GetAttribute("RiftSelectedMode") or 1; refresh() end)
+player:GetAttributeChangedSignal("RiftDuelPhase"):Connect(function()
+ if player:GetAttribute("RiftDuelPhase")=="Voting" then homeOpen=false; setOpen(false) end
+end)
+input.InputBegan:Connect(function(key,processed)
+ if not processed and key.KeyCode==Enum.KeyCode.M then toggle() end
+end)
+player:GetAttributeChangedSignal("RiftSelectedMode"):Connect(function() mode=player:GetAttribute("RiftSelectedMode") or 1; refreshAll() end)
+local nextRefresh=0
 run:BindToRenderStep("RiftSettings",Enum.RenderPriority.Camera.Value+2,function()
  local camera=workspace.CurrentCamera
  if camera then
   camera.FieldOfView=(player:GetAttribute("RiftFOV") or 80)*(player:GetAttribute("RiftZoom") or 1)
-  scale.Scale=math.min(1,(camera.ViewportSize.X-32)/920,(camera.ViewportSize.Y-100)/560)
+  local viewport=camera.ViewportSize
+  scale.Scale=math.clamp(math.min((viewport.X-32)/920,(viewport.Y-100)/560),.25,1)
+  local lobbyScale=math.clamp(math.min(viewport.X/1050,viewport.Y/650),.43,1)
+  matchScale.Scale=lobbyScale; goalsScale.Scale=lobbyScale; ranksScale.Scale=lobbyScale; navScale.Scale=lobbyScale
  end
- opener.Visible=not opened
- input.MouseDeltaSensitivity=opened and 0 or (player:GetAttribute("RiftSensitivity") or 1)
- if opened then input.MouseBehavior=Enum.MouseBehavior.Default; input.MouseIconEnabled=true else input.MouseIconEnabled=false end
+ home.Visible=homeOpen and not opened
+ opener.Visible=not opened and not homeOpen
+ local menuActive=opened or homeOpen
+ input.MouseDeltaSensitivity=menuActive and 0 or (player:GetAttribute("RiftSensitivity") or 1)
+ if menuActive then input.MouseBehavior=Enum.MouseBehavior.Default; input.MouseIconEnabled=true else input.MouseIconEnabled=false end
+ if home.Visible and os.clock()>=nextRefresh then nextRefresh=os.clock()+1; refreshLobby() end
 end)
-showPage("Play"); refresh(); setOpen(true)
+homeOpen=player:GetAttribute("RiftMap")=="Lobby" or player:GetAttribute("RiftMap")==nil
+showPage("Play"); setOpen(false); refreshAll()
 ]]></ProtectedString>
 					<bool name="Disabled">false</bool>
 					<Content name="LinkedSource"><null></null></Content>
@@ -111965,7 +112095,7 @@ local function refreshScoreboard()
    local color=info.team==1 and "BLUE" or "ORANGE"
    row.BackgroundColor3=C.surface
    cells[index][1].Text=info.name
-   cells[index][1].TextColor3=info.team==1 and Color3.fromRGB(159,187,208) or C.accent
+   cells[index][1].TextColor3=info.team==1 and C.blue or C.yellow
    cells[index][1].TextTruncate=Enum.TextTruncate.AtEnd
    cells[index][2].Text=tostring(info.kills)
    cells[index][3].Text=tostring(info.deaths)
@@ -112736,7 +112866,10 @@ return Models
 <Item class="ModuleScript" referent="RBXRiftUI"><Properties><string name="Name">RiftUI</string><ProtectedString name="Source"><![CDATA[-- Shared visual language; no gameplay state is owned here.
 local Tween=game:GetService("TweenService")
 local UI={}
-UI.C={bg=Color3.fromRGB(23,24,25),surface=Color3.fromRGB(32,33,35),hover=Color3.fromRGB(43,44,46),border=Color3.fromRGB(56,57,59),text=Color3.fromRGB(238,236,231),muted=Color3.fromRGB(169,170,166),accent=Color3.fromRGB(199,155,122),danger=Color3.fromRGB(212,101,94)}
+UI.C={bg=Color3.fromRGB(17,22,36),surface=Color3.fromRGB(32,40,62),hover=Color3.fromRGB(49,59,88),border=Color3.fromRGB(63,77,113),text=Color3.fromRGB(247,249,255),muted=Color3.fromRGB(186,200,226),accent=Color3.fromRGB(121,229,113),danger=Color3.fromRGB(252,104,109)}
+UI.C.yellow=Color3.fromRGB(255,212,95)
+UI.C.purple=Color3.fromRGB(190,151,255)
+UI.C.blue=Color3.fromRGB(117,193,255)
 function UI.corner(object,radius)
  local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(0,radius or 6); c.Parent=object
 end
@@ -112750,14 +112883,14 @@ function UI.surface(object)
 end
 function UI.text(parent,caption,x,y,w,h,size,color,bold)
  local t=Instance.new("TextLabel"); t.Text=caption; t.BackgroundTransparency=1; t.BorderSizePixel=0
- t.Position=UDim2.fromOffset(x,y); t.Size=UDim2.fromOffset(w,h); t.Font=bold and Enum.Font.GothamMedium or Enum.Font.Gotham
- t.TextSize=size or 14; t.TextColor3=color or UI.C.text; t.TextXAlignment=Enum.TextXAlignment.Left; t.TextYAlignment=Enum.TextYAlignment.Center
+ t.Position=UDim2.fromOffset(x,y); t.Size=UDim2.fromOffset(w,h); t.Font=bold and Enum.Font.GothamBold or Enum.Font.Gotham
+ t.TextStrokeColor3=UI.C.bg; t.TextStrokeTransparency=.76; t.TextSize=size or 14; t.TextColor3=color or UI.C.text; t.TextXAlignment=Enum.TextXAlignment.Left; t.TextYAlignment=Enum.TextYAlignment.Center
  t.Parent=parent; return t
 end
 function UI.button(parent,caption,x,y,w,h,callback,primary)
  local b=Instance.new("TextButton"); b.Name=caption; b.Text=caption; b.Position=UDim2.fromOffset(x,y); b.Size=UDim2.fromOffset(w,h)
  b.AutoButtonColor=false; b.BackgroundColor3=primary and UI.C.accent or UI.C.surface; b.BorderSizePixel=0
- b.TextColor3=primary and UI.C.bg or UI.C.text; b.Font=Enum.Font.GothamMedium; b.TextSize=14; b.Parent=parent; UI.corner(b)
+ b.TextColor3=primary and UI.C.bg or UI.C.text; b.Font=Enum.Font.GothamBold; b.TextSize=14; b.Parent=parent; UI.corner(b)
  local tween
  local function hover(entered)
   if tween then tween:Cancel() end
