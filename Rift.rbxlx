@@ -99052,7 +99052,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<int name="MaxVisibleGraphemes">-1</int>
 							<string name="OpenTypeFeatures"></string>
 							<bool name="RichText">false</bool>
-							<string name="Text">FIRST TO 3   &#226;&#128;&#162;   RIFLE + ABILITIES</string>
+							<string name="Text">FIRST TO 5  •  1V1 / 2V2 / 3V3</string>
 							<Color3 name="TextColor3">
 								<R>1</R>
 								<G>1</G>
@@ -99599,7 +99599,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<string name="OpenTypeFeatures"></string>
 							<bool name="RichText">false</bool>
 							<string name="Text"><![CDATA[QUEUE
-1V1]]></string>
+MATCHES]]></string>
 							<Color3 name="TextColor3">
 								<R>0.325490206</R>
 								<G>0.937254906</G>
@@ -99697,7 +99697,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 						<token name="KeyboardKeyCode">116</token>
 						<float name="MaxActivationDistance">14</float>
 						<float name="MaxIndicatorDistance">0</float>
-						<string name="ObjectText">1v1 duels</string>
+						<string name="ObjectText">Competitive matches</string>
 						<bool name="RequiresLineOfSight">false</bool>
 						<Ref name="RootLocalizationTable">null</Ref>
 						<token name="Style">0</token>
@@ -111898,6 +111898,21 @@ local variantParts={
   addCylinder(pistol,.25,.125,Vector3.new(0,.085,-.63),polymer),
   gun(Vector3.new(.27,.05,.37),Vector3.new(0,.17,-.15),Color3.fromRGB(94,121,80),pistol),
  },
+ [5]={
+  gun(Vector3.new(.35,.18,.42),Vector3.new(0,.04,-.85),Color3.fromRGB(46,123,111),rifle),
+ },
+ [6]={
+  addCylinder(rifle,.62,.25,Vector3.new(0,.03,-1.95),steel),
+  gun(Vector3.new(.37,.21,.54),Vector3.new(0,-.05,-.90),Color3.fromRGB(128,82,49),rifle),
+ },
+ [7]={
+  addCylinder(rifle,.50,.18,Vector3.new(0,.03,-2.10),steel),
+  addCylinder(rifle,.49,.25,Vector3.new(0,.35,-.09),polymer),
+ },
+ [8]={
+  addCylinder(pistol,.63,.31,Vector3.new(0,.12,-.37),steel),
+  addCylinder(pistol,.13,.36,Vector3.new(0,.12,-.69),Color3.fromRGB(188,107,49)),
+ },
 }
 local lastVariant
 local function updateVariant(id)
@@ -111920,7 +111935,7 @@ local function sound(name,id,volume,speed)
  return template
 end
 local shots={}
-for id=1,4 do
+for id=1,#weapons do
  shots[id]=sound("RiftWeaponFire"..id,weapons[id].shotSound,.27,weapons[id].soundPitch)
 end
 local shotFallback=sound("RiftFallbackFire","rbxasset://sounds/impact_explosion_03.mp3",.19,2.3)
@@ -111930,6 +111945,8 @@ local hitSound=sound("RiftHit","rbxasset://sounds/volume_slider.ogg",.2,1.4)
 local emptySound=sound("RiftEmpty","rbxasset://sounds/volume_slider.ogg",.17,.72)
 local abilitySound=sound("RiftAbilityCue","rbxasset://sounds/volume_slider.ogg",.19,1.65)
 local bounceSound=sound("RiftBounce","rbxasset://sounds/action_jump.mp3",.27,1.25)
+local eliminationSound=sound("RiftElimination","rbxasset://sounds/volume_slider.ogg",.31,1.96)
+local explosionSound=sound("RiftExplosion","rbxasset://sounds/impact_explosion_03.mp3",.41,1.1)
 local function playShot(slot,source)
  local template=shots[slot]
  local shot=(template.IsLoaded and template or shotFallback):Clone()
@@ -111954,7 +111971,26 @@ end
 local rounds=weapons[weaponId(1)].magazine
 local reloading=false
 local hitAt=0
+local hitAmount=label(UDim2.fromOffset(108,28),UDim2.new(.5,0,.5,-38),Vector2.new(.5,.5),"",17)
+hitAmount.BackgroundTransparency=1
+hitAmount.TextStrokeTransparency=.3
+hitAmount.Visible=false
+local feedbackUntil=0
+local aiming=false
+local aimBlend=0
+local equipBlend=0
+local reloadBlend=0
 local flashTween
+local function canFight()
+ if P:GetAttribute("RiftDuelId") then
+  return P:GetAttribute("RiftDuelPhase")=="Fight" and P:GetAttribute("RiftRoundAlive")==true
+ end
+ local map=P:GetAttribute("RiftMap")
+ return map~=nil and map~="Lobby"
+end
+local function kitAllows(action)
+ return not P:GetAttribute("RiftDuelId") or weapons.Kits[P:GetAttribute("RiftKit") or 1].omitted~=action
+end
 local function resetLoadout()
  table.clear(ready)
  equipped=1
@@ -111963,19 +111999,28 @@ local function resetLoadout()
  reloading=false
  nextShot=0
  kick=0
+ aiming=false
+ equipBlend=1
  stopReloadSound()
 end
 local function request(action)
  local cam=workspace.CurrentCamera
- if cam then R:FireServer(action,cam.CFrame.LookVector,equipped) end
+ if cam then R:FireServer(action,cam.CFrame.LookVector,equipped,aiming and not P:GetAttribute("RiftSprinting")) end
 end
 local function fire(now)
  if now<nextShot or rounds<=0 or reloading then return end
- nextShot=now+weapons[weaponId(equipped)].shotInterval+.015
+ local id=weaponId(equipped)
+ local weapon=weapons[id]
+ nextShot=now+weapon.shotInterval+.015
  request("fire")
+ playShot(id)
+ kick=weapon.recoil
+ local cam=workspace.CurrentCamera
+ if cam then cam.CFrame*=CFrame.Angles(math.rad(weapon.pitchKick*(aiming and .65 or 1)),0,0) end
 end
 U.InputBegan:Connect(function(input,processed)
- if processed or P:GetAttribute("RiftMenuOpen") or P:GetAttribute("RiftMap")=="Lobby" then return end
+ if processed or P:GetAttribute("RiftMenuOpen") or not canFight() then return end
+ if input.UserInputType==Enum.UserInputType.MouseButton2 then aiming=true end
  if input.UserInputType==Enum.UserInputType.MouseButton1 then
   held=weapons[weaponId(equipped)].automatic
   if rounds==0 and not reloading then emptySound:Play() else fire(os.clock()) end
@@ -111987,15 +112032,18 @@ U.InputBegan:Connect(function(input,processed)
  if input.KeyCode==Enum.KeyCode.R then request("reload") end
  if input.KeyCode==Enum.KeyCode.LeftShift then R:FireServer("sprint",true) end
  if input.KeyCode==Enum.KeyCode.C then R:FireServer("dash") end
+ if input.KeyCode==Enum.KeyCode.LeftControl then R:FireServer("slide") end
  local action=keys[input.KeyCode.Name]
- if action and (ready[action] or 0)<=os.clock() then request(action) end
+ if action and kitAllows(action) and (ready[action] or 0)<=os.clock() then request(action) end
 end)
 U.InputEnded:Connect(function(input)
  if input.UserInputType==Enum.UserInputType.MouseButton1 then held=false end
+ if input.UserInputType==Enum.UserInputType.MouseButton2 then aiming=false end
  if input.KeyCode==Enum.KeyCode.LeftShift then R:FireServer("sprint",false) end
 end)
 U.WindowFocusReleased:Connect(function()
  held=false
+ aiming=false
  R:FireServer("sprint",false)
 end)
 P:GetAttributeChangedSignal("RiftMenuOpen"):Connect(function()
@@ -112011,6 +112059,7 @@ R.OnClientEvent:Connect(function(event,a,b,c)
    nextShot=os.clock()+.2
    held=false
    kick=0
+   equipBlend=1
   end
   if c and not reloading then
    local reload=reloadSound.IsLoaded and reloadSound or reloadFallback
@@ -112023,11 +112072,19 @@ R.OnClientEvent:Connect(function(event,a,b,c)
   reloading=c
  elseif event=="shot" then
   playShot(a,b)
-  if not b then kick=weapons[a].recoil end
  elseif event=="hit" then
   hitAt=os.clock()+(a and .21 or .13)
   hitSound.PlaybackSpeed=a and 1.7 or 1.4
-  hitSound:Play()
+  if c then eliminationSound:Play() else hitSound:Play() end
+  hitAmount.Text=c and "ELIMINATED" or tostring(b or "")
+  hitAmount.TextColor3=a and Color3.fromRGB(255,191,83) or Color3.new(1,1,1)
+  feedbackUntil=os.clock()+.65
+ elseif event=="explosion" then
+  local cam=workspace.CurrentCamera
+  if cam then
+   explosionSound.Volume=.42*math.clamp(1-(cam.CFrame.Position-a).Magnitude/110,0,1)
+   explosionSound:Play()
+  end
  elseif event=="damageFrom" then
   damageAt=os.clock()+.65
   damagePosition=a
@@ -112061,15 +112118,29 @@ R.OnClientEvent:Connect(function(event,a,b,c)
 end)
 Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
  local now=os.clock()
- for _,f in cross do f.UIScale.Scale=P:GetAttribute("RiftCrosshair") or 1 end
  local cam=workspace.CurrentCamera
  local hum=P.Character and P.Character:FindFirstChildOfClass("Humanoid")
  local inLobby=P:GetAttribute("RiftMap")=="Lobby"
- gui.Enabled=not inLobby
- local alive=hum and hum.Health>0 and not inLobby
- if P:GetAttribute("RiftMenuOpen") then held=false end
+ gui.Enabled=not inLobby and P:GetAttribute("RiftDuelPhase")~="Voting"
+ local fighting=canFight()
+ local eliminated=P:GetAttribute("RiftDuelPhase")=="Fight" and not P:GetAttribute("RiftRoundAlive")
+ local alive=hum and hum.Health>0 and not inLobby and not eliminated
+ local menuOpen=P:GetAttribute("RiftMenuOpen")
+ if menuOpen or not fighting then held=false; aiming=false end
+ local weapon=weapons[weaponId(equipped)]
+ local sliding=P:GetAttribute("RiftSliding")==true
+ local sprinting=P:GetAttribute("RiftSprinting")==true
+ local ads=aiming and alive and not reloading and not sprinting and not sliding
+ local smooth=1-math.exp(-dt*15)
+ aimBlend+=( (ads and 1 or 0)-aimBlend)*smooth
+ reloadBlend+=((reloading and 1 or 0)-reloadBlend)*smooth
+ equipBlend=math.max(0,equipBlend-dt*4.8)
+ local zoom=1-(1-weapon.zoom)*aimBlend
+ if P:GetAttribute("RiftZoom")~=zoom then P:SetAttribute("RiftZoom",zoom) end
+ if hum then hum.CameraOffset=hum.CameraOffset:Lerp(sliding and Vector3.new(0,-.85,0) or Vector3.zero,smooth) end
+ hitAmount.Visible=now<feedbackUntil
  if cam then footerScale.Scale=math.clamp((cam.ViewportSize.X-28)/780,.3,1) end
- local hp=hum and math.clamp(hum.Health,0,100) or 0
+ local hp=alive and math.clamp(hum.Health,0,100) or 0
  health.Text=string.format("%d/100 HP",math.ceil(hp))
  healthFill.Size=UDim2.fromScale(hp/100,1)
  healthFill.Visible=hp>0
@@ -112090,16 +112161,23 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
  end
  ammo.Text=reloading and "RELOADING" or string.format("%02d / %02d",rounds,weapons[weaponId(equipped)].magazine)
  for slot,chip in weaponSlots do
-  local name=weapons[weaponId(slot)].name:match("%S+")
+  local name=weapons[weaponId(slot)].short
   chip.Text=slot.."  "..name:upper()
   chip.BackgroundColor3=slot==equipped and Color3.fromRGB(35,94,85) or Color3.fromRGB(17,24,38)
   chip.BackgroundTransparency=slot==equipped and .06 or .23
  end
  for key,action in keys do
   local seconds=math.ceil((ready[action] or 0)-now)
+  local allowed=kitAllows(action)
   slots[action].Text=key.."  "..string.upper(action)..(seconds>0 and ("  "..seconds.."s") or "")
+  slots[action].TextTransparency=allowed and 0 or .64
+  slots[action].BackgroundTransparency=allowed and .23 or .62
  end
- for _,f in cross do f.BackgroundColor3=now<hitAt and Color3.fromRGB(255,98,104) or Color3.fromRGB(130,255,226) end
+ for _,f in cross do
+  f.Visible=alive
+  f.UIScale.Scale=(P:GetAttribute("RiftCrosshair") or 1)*(sprinting and 1.25 or 1-.42*aimBlend)
+  f.BackgroundColor3=now<hitAt and Color3.fromRGB(255,98,104) or Color3.fromRGB(130,255,226)
+ end
  if not cam then return end
  local inside=false
  for i=#clouds,1,-1 do
@@ -112110,16 +112188,33 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
  fog.BackgroundTransparency=inside and .04 or 1
  local view=views[equipped]
  updateVariant(weaponId(equipped))
- local showWeapon=alive and not P:GetAttribute("RiftMenuOpen")
+ local showWeapon=alive and not menuOpen and P:GetAttribute("RiftDuelPhase")~="Voting"
  for _,model in views do
   local parent=showWeapon and model==view and cam or nil
   if model.Parent~=parent then model.Parent=parent end
  end
  if not showWeapon then return end
- if held then fire(now) end
+ if held and fighting then fire(now) end
  kick=math.max(0,kick-dt*1.8)
+ local root=P.Character and P.Character:FindFirstChild("HumanoidRootPart")
+ local velocity=root and root.AssemblyLinearVelocity or Vector3.zero
+ local planar=Vector3.new(velocity.X,0,velocity.Z)
+ local horizontal=planar.Magnitude
+ if fighting and root and hum.FloorMaterial==Enum.Material.Air and not sliding and horizontal<26 then
+  local input=hum.MoveDirection
+  if input.Magnitude>.1 then
+   local steered=planar:Lerp(input*math.max(horizontal,17),math.min(dt*2.1,.12))
+   root.AssemblyLinearVelocity=Vector3.new(steered.X,velocity.Y,steered.Z)
+  end
+ end
+ local stride=math.min(horizontal/24,1)*(1-aimBlend)
+ local bobX=math.sin(now*(sprinting and 15 or 10))*.035*stride
+ local bobY=math.cos(now*(sprinting and 30 or 20))*.032*stride
  local distance=equipped==1 and -1.45 or -1.15
- local base=cam.CFrame*CFrame.new(.52,reloading and -.95 or -.52,distance+kick)
+ local x=.52*(1-aimBlend)+bobX
+ local y=-.52+.37*aimBlend-.49*reloadBlend-.55*equipBlend+bobY
+ local base=cam.CFrame*CFrame.new(x,y,distance+kick+.1*aimBlend)
+  *CFrame.Angles(-.35*reloadBlend-.26*equipBlend,0,.22*reloadBlend-.12*equipBlend)
  for _,p in view:GetChildren() do p.CFrame=base*CFrame.new(p:GetAttribute("Offset"))*CFrame.Angles(0,p:GetAttribute("Yaw") or 0,0) end
 end)]]></ProtectedString>
 					<bool name="Disabled">false</bool>
@@ -112145,6 +112240,12 @@ local run=game:GetService("RunService")
 local remote=game.ReplicatedStorage:WaitForChild("RiftTravel")
 local action=game.ReplicatedStorage:WaitForChild("RiftAction")
 local weapons=require(game.ReplicatedStorage:WaitForChild("RiftWeapons"))
+local clickSound=Instance.new("Sound")
+clickSound.Name="RiftMenuClick"
+clickSound.SoundId="rbxasset://sounds/volume_slider.ogg"
+clickSound.Volume=.15
+clickSound.PlaybackSpeed=1.5
+clickSound.Parent=game:GetService("SoundService")
 local gui=Instance.new("ScreenGui")
 gui.Name="RiftSettings"; gui.ResetOnSpawn=false; gui.DisplayOrder=30; gui.Parent=player:WaitForChild("PlayerGui")
 local panel=Instance.new("Frame")
@@ -112158,7 +112259,12 @@ end
 local function button(caption,x,y,w,h,callback,parent)
  local b=Instance.new("TextButton"); b.Text=caption; b.Position=UDim2.fromOffset(x,y); b.Size=UDim2.fromOffset(w,h)
  b.BackgroundColor3=Color3.fromRGB(43,66,77); b.TextColor3=Color3.fromRGB(220,255,243); b.Font=Enum.Font.GothamBold; b.TextSize=14; b.Parent=parent or panel
- b.Activated:Connect(callback); return b
+ b.Activated:Connect(function()
+  if not b.Active then return end
+  clickSound:Play()
+  callback()
+ end)
+ return b
 end
 local function toggle()
  panel.Visible=not panel.Visible; player:SetAttribute("RiftMenuOpen",panel.Visible)
@@ -112191,7 +112297,8 @@ for slot,choices in weapons.Loadouts do
  local x=slot==1 and 18 or 287
  text(title,x,263,255,20).TextSize=12
  local chip=button("",x,287,255,36,function()
-  local nextWeapon=selected()==choices[1] and choices[2] or choices[1]
+  local index=table.find(choices,selected()) or 1
+  local nextWeapon=choices[index%#choices+1]
   action:FireServer("loadout",nextWeapon)
  end)
  local function refresh()
@@ -112205,7 +112312,21 @@ for slot,choices in weapons.Loadouts do
  player:GetAttributeChangedSignal("RiftQueued"):Connect(refresh)
  refresh()
 end
-text("Change weapons in the lobby before queueing.",18,328,520,20).TextSize=12
+local kit=button("",18,330,520,26,function()
+ local current=player:GetAttribute("RiftKit") or 1
+ action:FireServer("kit",current%#weapons.Kits+1)
+end)
+local function refreshKit()
+ local selected=weapons.Kits[player:GetAttribute("RiftKit") or 1]
+ local available=player:GetAttribute("RiftMap")=="Lobby" and not player:GetAttribute("RiftQueued")
+ kit.Active=available
+ kit.BackgroundTransparency=available and 0 or .47
+ kit.Text="KIT  ·  "..selected.name.."  ·  Omits "..selected.omitted.." in matches"
+end
+player:GetAttributeChangedSignal("RiftKit"):Connect(refreshKit)
+player:GetAttributeChangedSignal("RiftMap"):Connect(refreshKit)
+player:GetAttributeChangedSignal("RiftQueued"):Connect(refreshKit)
+refreshKit()
 text("PRACTICE MAPS",18,358,520,26)
 local choices={"Training Arena","Pine Ridge","Red Mesa","Metro District","Dockyard","Lobby"}
 for i,name in choices do
@@ -112216,12 +112337,12 @@ for i,name in choices do
   toggle()
  end)
 end
-text("1 primary · 2 secondary · R reload · Q/E/F abilities · C dash",18,502,520,26).TextSize=12
+text("RMB aim  ·  R reload  ·  Ctrl slide  ·  Q/E/F/C abilities",18,502,520,26).TextSize=12
 input.InputBegan:Connect(function(key,processed) if not processed and key.KeyCode==Enum.KeyCode.M then toggle() end end)
 run:BindToRenderStep("RiftSettings",Enum.RenderPriority.Camera.Value+2,function()
  local camera=workspace.CurrentCamera
  if camera then
-  camera.FieldOfView=player:GetAttribute("RiftFOV") or 80
+  camera.FieldOfView=(player:GetAttribute("RiftFOV") or 80)*(player:GetAttribute("RiftZoom") or 1)
   scale.Scale=math.min(1,(camera.ViewportSize.X-30)/560,(camera.ViewportSize.Y-40)/562)
  end
  input.MouseDeltaSensitivity=panel.Visible and 0 or (player:GetAttribute("RiftSensitivity") or 1)
@@ -112245,61 +112366,164 @@ end)
 			</Item>
 			<Item class="LocalScript" referent="RBXd9389c6f99fa44b293cea5f31d89325e">
 				<Properties>
-					<ProtectedString name="Source"><![CDATA[local player = game.Players.LocalPlayer
-local queue = game.ReplicatedStorage:WaitForChild("RiftQueue")
-local input = game:GetService("UserInputService")
-local run = game:GetService("RunService")
-local gui = Instance.new("ScreenGui")
-gui.Name = "RiftDuelHUD"
-gui.DisplayOrder = 5
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+					<ProtectedString name="Source"><![CDATA[local player=game.Players.LocalPlayer
+local queue=game.ReplicatedStorage:WaitForChild("RiftQueue")
+local input=game:GetService("UserInputService")
+local run=game:GetService("RunService")
+local http=game:GetService("HttpService")
+game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,false)
+local gui=Instance.new("ScreenGui")
+gui.Name="RiftDuelHUD"
+gui.DisplayOrder=5
+gui.ResetOnSpawn=false
+gui.Parent=player:WaitForChild("PlayerGui")
 
-local banner = Instance.new("TextLabel")
-banner.Name = "DuelStatus"
-banner.AnchorPoint = Vector2.new(.5, 0)
-banner.Position = UDim2.new(.5, 0, 0, 70)
-banner.Size = UDim2.new(.88, 0, 0, 65)
-banner.BackgroundColor3 = Color3.fromRGB(20,29,38)
-banner.BackgroundTransparency = .12
-banner.TextColor3 = Color3.fromRGB(187,251,229)
-banner.Font = Enum.Font.GothamBold
-banner.TextSize = 17
-banner.TextWrapped = true
-banner.Parent = gui
-local width = Instance.new("UISizeConstraint")
-width.MaxSize = Vector2.new(470, 65)
-width.Parent = banner
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 6)
-corner.Parent = banner
+local function label(parent,name,size,position,fontSize)
+ local item=Instance.new("TextLabel")
+ item.Name=name
+ item.Size=size
+ item.Position=position
+ item.Text=""
+ item.TextColor3=Color3.fromRGB(228,246,252)
+ item.BackgroundColor3=Color3.fromRGB(19,29,40)
+ item.BackgroundTransparency=.12
+ item.Font=Enum.Font.GothamBold
+ item.TextSize=fontSize
+ item.TextWrapped=true
+ item.Parent=parent
+ local corner=Instance.new("UICorner")
+ corner.CornerRadius=UDim.new(0,8)
+ corner.Parent=item
+ return item
+end
 
-input.InputBegan:Connect(function(key, processed)
- if not processed and key.KeyCode == Enum.KeyCode.J and not player:GetAttribute("RiftMenuOpen") then
-  queue:FireServer()
+local banner=label(gui,"MatchStatus",UDim2.new(.9,0,0,62),UDim2.new(.5,0,0,24),17)
+banner.AnchorPoint=Vector2.new(.5,0)
+local width=Instance.new("UISizeConstraint")
+width.MaxSize=Vector2.new(460,62)
+width.Parent=banner
+local vote=label(gui,"MapVote",UDim2.new(.9,0,0,150),UDim2.new(.5,0,.4,0),19)
+vote.AnchorPoint=Vector2.new(.5,.5)
+local voteWidth=Instance.new("UISizeConstraint")
+voteWidth.MaxSize=Vector2.new(490,150)
+voteWidth.Parent=vote
+local board=label(gui,"Scoreboard",UDim2.new(.93,0,0,288),UDim2.fromScale(.5,.5),16)
+board.AnchorPoint=Vector2.new(.5,.5)
+board.Text=""
+local boardWidth=Instance.new("UISizeConstraint")
+boardWidth.MaxSize=Vector2.new(500,288)
+boardWidth.Parent=board
+local headings=label(board,"Headings",UDim2.new(1,-20,0,35),UDim2.fromOffset(10,6),16)
+headings.BackgroundTransparency=1
+headings.Text="MATCH SCOREBOARD"
+local columns=label(board,"Columns",UDim2.new(1,-24,0,26),UDim2.fromOffset(12,42),12)
+columns.BackgroundTransparency=1
+columns.Text="TEAM   /   PLAYER                                   KILLS   DEATHS   WINS"
+local rows={}
+for index=1,6 do
+ local row=label(board,"Player"..index,UDim2.new(1,-24,0,31),UDim2.fromOffset(12,72+(index-1)*34),13)
+ row.TextXAlignment=Enum.TextXAlignment.Left
+ row.Font=Enum.Font.RobotoMono
+ row.TextWrapped=false
+ rows[index]=row
+end
+
+local mode=1
+local voting={}
+local picked
+local scoreboardHeld=false
+local lastPhase
+local function readAttribute(name)
+ local source=player:GetAttribute(name)
+ return source and http:JSONDecode(source) or {}
+end
+local function refreshVotes()
+ voting=readAttribute("RiftVoteMaps")
+ local lines={}
+ for index,option in voting do
+  table.insert(lines,string.format("[%d]  %s   ·   %d%s",index,option.name,option.count,picked==option.name and "   ✓" or ""))
+ end
+ vote.Text=table.concat(lines,"\n")
+end
+local function refreshScoreboard()
+ local stats=readAttribute("RiftScoreboard")
+ table.sort(stats,function(a,b) return a.team<b.team end)
+ for index,row in rows do
+  local info=stats[index]
+  row.Visible=info~=nil
+  if info then
+   local color=info.team==1 and "BLUE" or "ORANGE"
+   row.BackgroundColor3=info.team==1 and Color3.fromRGB(34,67,97) or Color3.fromRGB(99,57,38)
+   row.Text=string.format("  %-6s  %-15s   %4d   %6d   %4d",color,info.name:sub(1,(utf8.offset(info.name,15) or #info.name+1)-1),info.kills,info.deaths,info.wins)
+  end
+ end
+end
+player:GetAttributeChangedSignal("RiftVoteMaps"):Connect(refreshVotes)
+player:GetAttributeChangedSignal("RiftScoreboard"):Connect(refreshScoreboard)
+refreshVotes()
+refreshScoreboard()
+
+local numberKeys={[Enum.KeyCode.One]=1,[Enum.KeyCode.Two]=2,[Enum.KeyCode.Three]=3}
+input.InputBegan:Connect(function(key,processed)
+ if key.KeyCode==Enum.KeyCode.Tab then scoreboardHeld=true end
+ if processed or player:GetAttribute("RiftMenuOpen") then return end
+ if player:GetAttribute("RiftDuelPhase")=="Voting" then
+  local choice=numberKeys[key.KeyCode]
+  if choice and voting[choice] then
+   picked=voting[choice].name
+   queue:FireServer("vote",picked)
+   refreshVotes()
+  end
+  return
+ end
+ if player:GetAttribute("RiftMap")~="Lobby" then return end
+ if key.KeyCode==Enum.KeyCode.J then
+  queue:FireServer("queue",mode)
+ elseif key.KeyCode==Enum.KeyCode.N and not player:GetAttribute("RiftQueued") then
+  mode=mode%3+1
+  queue:FireServer("mode",mode)
  end
 end)
+input.InputEnded:Connect(function(key) if key.KeyCode==Enum.KeyCode.Tab then scoreboardHeld=false end end)
+input.WindowFocusReleased:Connect(function() scoreboardHeld=false end)
 
 run.RenderStepped:Connect(function()
- local phase = player:GetAttribute("RiftDuelPhase")
- local lobby = player:GetAttribute("RiftMap") == "Lobby"
- banner.Visible = (lobby or phase ~= nil) and not player:GetAttribute("RiftMenuOpen")
+ local phase=player:GetAttribute("RiftDuelPhase")
+ local lobby=player:GetAttribute("RiftMap")=="Lobby"
+ local clear=not player:GetAttribute("RiftMenuOpen")
+ if phase~=lastPhase then
+  if phase=="Voting" then picked=nil; refreshVotes() end
+  lastPhase=phase
+ end
+ banner.Visible=(lobby or phase~=nil) and clear
+ vote.Visible=phase=="Voting" and clear
+ board.Visible=phase~=nil and phase~="Voting" and clear and (scoreboardHeld or phase=="Finished")
  if not banner.Visible then return end
+ banner.TextColor3=Color3.fromRGB(228,246,252)
  if phase then
-  local map = player:GetAttribute("RiftDuelArena") or "Duel"
-  local score = player:GetAttribute("RiftDuelScore") or "0 – 0"
-  local message = player:GetAttribute("RiftDuelMessage") or ""
-  local deadline = player:GetAttribute("RiftDuelDeadline") or 0
-  local seconds = math.max(0, math.ceil(deadline-workspace:GetServerTimeNow()))
-  local suffix = ""
-  if phase == "Fight" then suffix = string.format("  /  %d:%02d", math.floor(seconds/60), seconds%60) end
-  if phase == "Countdown" then suffix = "  /  Starts in " .. seconds end
-  if phase == "Finished" then suffix = "  /  Lobby in " .. seconds end
-  banner.Text = map:upper() .. "   •   " .. score .. "\n" .. message .. suffix
- elseif player:GetAttribute("RiftQueued") then
-  banner.Text = "1V1 QUEUE   •   WAITING FOR OPPONENT\nJ to leave the queue"
+  local map=player:GetAttribute("RiftDuelArena") or "MAP VOTE"
+  local score=player:GetAttribute("RiftDuelScore") or "0 – 0"
+  local message=player:GetAttribute("RiftDuelMessage") or ""
+  local seconds=math.max(0,math.ceil((player:GetAttribute("RiftDuelDeadline") or 0)-workspace:GetServerTimeNow()))
+  if phase=="Voting" then
+   banner.Text="MAP VOTE   ·   "..seconds.."s\nPress 1, 2, or 3"
+  elseif phase=="Finished" then
+   banner.Text=message.."  ·  "..score.."\nLobby in "..seconds.."s"
+   banner.TextColor3=message=="DEFEAT" and Color3.fromRGB(255,138,105) or Color3.fromRGB(132,241,204)
+  else
+   local team=player:GetAttribute("RiftTeam")==1 and "BLUE" or "ORANGE"
+   local detail=message
+   if phase=="Fight" then
+    detail=player:GetAttribute("RiftRoundAlive") and string.format("%s  ·  0:%02d",message,seconds) or "Eliminated   ·   Respawn next round"
+   elseif phase=="Countdown" then detail="Starts in "..seconds.."s" end
+   banner.Text=team.."  ·  "..map:upper().."  ·  "..score.."\n"..detail
+  end
  else
-  banner.Text = "RIFT LOBBY   /   FIRST TO 3\nJ to queue   •   M for settings and practice"
+  local size=player:GetAttribute("RiftQueued") and (player:GetAttribute("RiftQueueSize") or mode) or mode
+  local count=workspace:GetAttribute("RiftQueueCount"..size) or 0
+  local format=string.format("%dv%d  ·  %d/%d QUEUED",size,size,count,size*2)
+  local hint=player:GetAttribute("RiftQueued") and "J to leave queue" or "J join   ·   N change mode   ·   M loadout"
+  banner.Text=format.."\n"..hint
  end
 end)
 ]]></ProtectedString>
@@ -112912,62 +113136,26 @@ end)
 		<Item class="ModuleScript" referent="RBXed2426db807849378028a874ad1c2013">
 			<Properties>
 				<string name="Name">RiftWeapons</string>
-				<ProtectedString name="Source"><![CDATA[return {
- [1] = {
-  name = "Vanguard Rifle",
-  magazine = 25,
-  shotInterval = .105,
-  reloadTime = 1.35,
-  automatic = true,
-  range = 450,
-  bodyDamage = 34,
-  headDamage = 100,
-  recoil = .14,
-  shotSound = "rbxassetid://72591590550768",
-  soundPitch = 1,
- },
- [2] = {
-  name = "Scout Pistol",
-  magazine = 12,
-  shotInterval = .24,
-  reloadTime = 1.05,
-  automatic = false,
-  range = 250,
-  bodyDamage = 26,
-  headDamage = 70,
-  recoil = .19,
-  shotSound = "rbxassetid://98975838871911",
-  soundPitch = 1.12,
- },
- [3] = {
-  name = "Longshot Carbine",
-  magazine = 15,
-  shotInterval = .19,
-  reloadTime = 1.45,
-  automatic = false,
-  range = 550,
-  bodyDamage = 42,
-  headDamage = 100,
-  recoil = .20,
-  shotSound = "rbxassetid://72591590550768",
-  soundPitch = .83,
- },
- [4] = {
-  name = "Viper Pistol",
-  magazine = 16,
-  shotInterval = .15,
-  reloadTime = .9,
-  automatic = false,
-  range = 180,
-  bodyDamage = 21,
-  headDamage = 55,
-  recoil = .12,
-  shotSound = "rbxassetid://98975838871911",
-  soundPitch = 1.3,
- },
- Loadouts = {{1,3},{2,4}},
- ReloadSound = "rbxassetid://117963160131194",
+				<ProtectedString name="Source"><![CDATA[local weapons = {
+ -- Hip and ADS spread are half angles in degrees. Fire intervals are in seconds.
+ {name="Vanguard Rifle", short="Rifle", model="rifle", magazine=25, shotInterval=.105, reloadTime=1.35, automatic=true, range=450, bodyDamage=33, headMultiplier=2.35, hip=1.3, ads=.36, zoom=.80, recoil=.14, pitchKick=1.08, shotSound="rbxassetid://72591590550768", soundPitch=1},
+ {name="Scout Pistol", short="Scout", model="pistol", magazine=12, shotInterval=.24, reloadTime=1.05, automatic=false, range=250, bodyDamage=27, headMultiplier=2.45, hip=1.45, ads=.48, zoom=.88, recoil=.19, pitchKick=1.35, shotSound="rbxassetid://98975838871911", soundPitch=1.12},
+ {name="Longshot Carbine", short="Carbine", model="rifle", magazine=15, shotInterval=.19, reloadTime=1.45, automatic=false, range=550, bodyDamage=42, headMultiplier=2.4, hip=1.1, ads=.23, zoom=.74, recoil=.20, pitchKick=1.55, shotSound="rbxassetid://72591590550768", soundPitch=.83},
+ {name="Viper Pistol", short="Viper", model="pistol", magazine=16, shotInterval=.15, reloadTime=.9, automatic=false, range=180, bodyDamage=21, headMultiplier=2.4, hip=1.65, ads=.58, zoom=.9, recoil=.12, pitchKick=1.00, shotSound="rbxassetid://98975838871911", soundPitch=1.3},
+ {name="Rush SMG", short="SMG", model="rifle", magazine=30, shotInterval=.075, reloadTime=1.25, automatic=true, range=220, bodyDamage=19, headMultiplier=1.7, hip=2, ads=.68, zoom=.88, recoil=.09, pitchKick=.65, shotSound="rbxassetid://72591590550768", soundPitch=1.42},
+ {name="Breach Shotgun", short="Shotgun", model="rifle", magazine=5, shotInterval=.66, reloadTime=1.8, automatic=false, range=115, bodyDamage=14, headMultiplier=1.45, hip=5.7, ads=3.7, zoom=.85, recoil=.28, pitchKick=3.0, pellets=8, shotSound="rbxassetid://71816202649396", soundPitch=1},
+ {name="Horizon Sniper", short="Sniper", model="rifle", magazine=4, shotInterval=1.0, reloadTime=1.9, automatic=false, range=650, bodyDamage=78, headMultiplier=1.8, hip=4.2, ads=.065, zoom=.48, recoil=.34, pitchKick=3.25, shotSound="rbxassetid://9118173988", soundPitch=1.1},
+ {name="Arc Launcher", short="Launcher", model="pistol", magazine=1, shotInterval=.92, reloadTime=1.85, automatic=false, range=100, bodyDamage=62, headMultiplier=1, hip=1.3, ads=.6, zoom=.9, recoil=.29, pitchKick=2.65, blastRadius=13, shotSound="rbxasset://sounds/impact_explosion_03.mp3", soundPitch=2.4},
 }
+
+weapons.Loadouts = {{1,3,5,6,7},{2,4,8}}
+weapons.Kits = {
+ {name="Vanguard", omitted="recon"},
+ {name="Sentinel", omitted="flash"},
+ {name="Scout", omitted="smoke"},
+}
+weapons.ReloadSound = "rbxassetid://117963160131194"
+return weapons
 ]]></ProtectedString>
 			</Properties>
 		</Item>
@@ -113024,6 +113212,11 @@ end)
 			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			<UniqueId name="UniqueId">3c83a70e7eb853630afca5dc000003c0</UniqueId>
 		</Properties>
+		<Item class="BindableEvent" referent="RBXc2c05f635be94ff594627f9bc10185fa">
+			<Properties>
+				<string name="Name">RiftElimination</string>
+			</Properties>
+		</Item>
 		<Item class="Script" referent="RBX9f790212876c4f6ea9d242533b8a5177">
 			<Properties>
 				<string name="Name">RiftMovement</string>
@@ -113075,6 +113268,11 @@ local function addFeatures(map,mapName,center,duel)
   table.insert(boosts,trampoline)
   local hazard=makePart(folder,"Live hazard",Vector3.new(9,.16,10),center+Vector3.new(side*(duel and 13 or 9),.13,side*20),Color3.fromRGB(247,89,33),Enum.Material.Neon)
   table.insert(hazards,hazard)
+  if duel then
+   local deckColor=side==1 and Color3.fromRGB(82,132,173) or Color3.fromRGB(173,111,79)
+   makePart(folder,"Flank step",Vector3.new(5,2,6),center+Vector3.new(side*34,1,0),deckColor,Enum.Material.Concrete)
+   makePart(folder,"Flank platform",Vector3.new(7,4,6),center+Vector3.new(side*40,2,0),deckColor,Enum.Material.Concrete)
+  end
  end
 end
 
@@ -113088,10 +113286,14 @@ for _,map in workspace.RiftDuels:GetChildren() do
  if spawn then addFeatures(map,map.Name,Vector3.new(spawn.X,10,0),true) end
 end
 
+game.Lighting.Ambient=Color3.fromRGB(95,101,113)
+game.Lighting.OutdoorAmbient=Color3.fromRGB(142,148,157)
+
 local function resetPlayer(player)
- states[player]={stamina=100,sprint=false,exhausted=false,dashUntil=0,boostUntil=0,hazardUntil=0,recoverAt=0}
+ states[player]={stamina=100,sprint=false,exhausted=false,dashUntil=0,boostUntil=0,hazardUntil=0,recoverAt=0,slideUntil=0,slideReady=0}
  player:SetAttribute("RiftStamina",100)
  player:SetAttribute("RiftSprinting",false)
+ player:SetAttribute("RiftSliding",false)
 end
 
 local function bind(player)
@@ -113105,14 +113307,14 @@ reset.Event:Connect(resetPlayer)
 
 local function activeMap(player)
  if player:GetAttribute("RiftDuelId") then
-  if player:GetAttribute("RiftDuelPhase")=="Fight" then return player:GetAttribute("RiftDuelArena") end
+  if player:GetAttribute("RiftDuelPhase")=="Fight" and player:GetAttribute("RiftRoundAlive") then return player:GetAttribute("RiftDuelArena") end
   return nil
  end
  return player:GetAttribute("RiftMap")
 end
 
 remote.OnServerEvent:Connect(function(player,action,arg)
- if action~="sprint" and action~="dash" then return end
+ if action~="sprint" and action~="dash" and action~="slide" then return end
  local state=states[player]
  if not state then return end
  if action=="sprint" and arg==false then state.sprint=false; return end
@@ -113131,6 +113333,18 @@ remote.OnServerEvent:Connect(function(player,action,arg)
   if flat.Magnitude>.01 then launch(root,flat.Unit*46) end
   player:SetAttribute("RiftStamina",math.floor(state.stamina))
   remote:FireClient(player,"abilityCast","dash")
+ elseif action=="slide" then
+  local now=os.clock()
+  local velocity=root.AssemblyLinearVelocity
+  local horizontal=Vector3.new(velocity.X,0,velocity.Z)
+  if not state.sprint or state.stamina<16 or now<state.slideReady or horizontal.Magnitude<14 or humanoid.FloorMaterial==Enum.Material.Air then return end
+  state.stamina-=16
+  state.slideUntil=now+.48
+  state.slideReady=now+1.2
+  state.recoverAt=now+.65
+  launch(root,horizontal.Unit*math.max(0,37-horizontal.Magnitude))
+  player:SetAttribute("RiftSliding",true)
+  remote:FireClient(player,"abilityCast","slide")
  end
 end)
 
@@ -113154,7 +113368,8 @@ run.Heartbeat:Connect(function(dt)
   local region=features[activeMap(player) or ""]
   if state.stamina<=0 then state.exhausted=true end
   if state.exhausted and state.stamina>=30 then state.exhausted=false end
-  local sprint=region~=nil and state.sprint and not state.exhausted and not root.Anchored
+  local sliding=region~=nil and now<state.slideUntil and not root.Anchored
+  local sprint=region~=nil and state.sprint and not sliding and not state.exhausted and not root.Anchored
   local velocity=root.AssemblyLinearVelocity
   local moving=Vector3.new(velocity.X,0,velocity.Z).Magnitude>2
   if sprint and moving then
@@ -113163,10 +113378,11 @@ run.Heartbeat:Connect(function(dt)
   elseif not sprint and now>=state.recoverAt then
    state.stamina=math.min(100,state.stamina+step*18)
   end
-  local speed=sprint and 24 or 16
+  local speed=sliding and 28 or (sprint and 25 or 17)
   if humanoid.WalkSpeed~=speed then humanoid.WalkSpeed=speed end
   player:SetAttribute("RiftStamina",math.floor(state.stamina))
   player:SetAttribute("RiftSprinting",sprint and moving)
+  player:SetAttribute("RiftSliding",sliding)
   if not region or root.Anchored then continue end
   if now>=state.boostUntil and velocity.Y<10 then
    for _,pad in region.boosts do
@@ -113199,6 +113415,8 @@ end)
 local R=game.ReplicatedStorage.RiftAction
 local D=game:GetService("Debris")
 local weapons=require(game.ReplicatedStorage.RiftWeapons)
+local eliminated=script.Parent.RiftElimination
+local rng=Random.new()
 local S={}
 local function reset(p)
  local primary=p:GetAttribute("RiftPrimary") or 1
@@ -113231,7 +113449,7 @@ end
 local function sameCombatSpace(a,b)
  local duel=a:GetAttribute("RiftDuelId")
  if duel then
-  return b:GetAttribute("RiftDuelId")==duel and b:GetAttribute("RiftDuelPhase")=="Fight"
+  return b:GetAttribute("RiftDuelId")==duel and b:GetAttribute("RiftDuelPhase")=="Fight" and b:GetAttribute("RiftRoundAlive")==true
  end
  local map=a:GetAttribute("RiftMap")
  return map and map~="Lobby" and not b:GetAttribute("RiftDuelId") and b:GetAttribute("RiftMap")==map
@@ -113246,17 +113464,89 @@ local function effect(parent,pos,size,color,alpha,life,ball)
  part.Size=size; part.Position=pos; part.Color=color; part.Transparency=alpha; part.Material=Enum.Material.Neon
  part.Parent=parent; D:AddItem(part,life); return part
 end
+local function enemy(attacker,opponent)
+ if not sameCombatSpace(attacker,opponent) then return false end
+ return not attacker:GetAttribute("RiftDuelId") or attacker:GetAttribute("RiftTeam")~=opponent:GetAttribute("RiftTeam")
+end
+
+local function damage(attacker,model,amount,headshot,origin)
+ if not model then return end
+ local opponent=P:GetPlayerFromCharacter(model)
+ if opponent then
+  if opponent==attacker or not enemy(attacker,opponent) then return end
+ elseif attacker:GetAttribute("RiftDuelId") or model.Parent~=workspace.RiftArena.Targets then
+  return
+ end
+ local target=model:FindFirstChildOfClass("Humanoid")
+ if not target or target.Health<=0 then return end
+ local before=target.Health
+ target:TakeDamage(math.round(amount))
+ local dealt=math.round(before-target.Health)
+ if dealt<=0 then return end
+ local killed=target.Health<=0
+ R:FireClient(attacker,"hit",headshot,dealt,killed)
+ if opponent then
+  R:FireClient(opponent,"damageFrom",origin)
+  if killed then eliminated:Fire(attacker,opponent) end
+ end
+end
+
+local function trace(parent,origin,dest)
+ local start=origin-Vector3.new(0,.55,0)
+ local length=(dest-start).Magnitude
+ if length<.02 then return end
+ local tracer=effect(parent,(start+dest)/2,Vector3.new(.055,.055,length),Color3.fromRGB(255,209,104),0,.065,false)
+ tracer.CFrame=CFrame.lookAt(tracer.Position,dest)
+end
+
+local function aimWithSpread(aim,degrees)
+ local cone=math.tan(math.rad(degrees))
+ local angle=rng:NextNumber(0,math.pi*2)
+ local radius=math.sqrt(rng:NextNumber())*cone
+ local basis=CFrame.lookAt(Vector3.zero,aim)
+ return (aim+basis.RightVector*(math.cos(angle)*radius)+basis.UpVector*(math.sin(angle)*radius)).Unit
+end
+
+local function blast(attacker,parent,position,weapon)
+ effect(parent,position,Vector3.one*weapon.blastRadius*2,Color3.fromRGB(255,159,68),.55,.18,true)
+ local targets={}
+ for _,player in P:GetPlayers() do
+  if player.Character and sameCombatSpace(attacker,player) then
+   R:FireClient(player,"explosion",position)
+   if player~=attacker then table.insert(targets,player.Character) end
+  end
+ end
+ if not attacker:GetAttribute("RiftDuelId") then
+  for _,bot in workspace.RiftArena.Targets:GetChildren() do table.insert(targets,bot) end
+ end
+ local sight=RaycastParams.new()
+ sight.FilterType=Enum.RaycastFilterType.Exclude
+ sight.FilterDescendantsInstances={attacker.Character}
+ for _,target in targets do
+  local root=target:FindFirstChild("HumanoidRootPart")
+  if not root then continue end
+  local offset=root.Position-position
+  if offset.Magnitude>weapon.blastRadius then continue end
+  local hit=workspace:Raycast(position,offset,sight)
+  if not hit or hit.Instance:IsDescendantOf(target) then
+   damage(attacker,target,weapon.bodyDamage*(1-.75*offset.Magnitude/weapon.blastRadius),false,position)
+  end
+ end
+end
+
 local cooldown={smoke=16,flash=12,recon=18}
-R.OnServerEvent:Connect(function(p,action,aim,expectedSlot)
+R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
  local s=S[p]; local c=p.Character
  local h=c and c:FindFirstChildOfClass("Humanoid")
  local head=c and c:FindFirstChild("Head")
  if not s or not h or h.Health<=0 or not head then return end
- if action=="loadout" then
+ if action=="loadout" or action=="kit" then
   if p:GetAttribute("RiftMap")~="Lobby" or p:GetAttribute("RiftQueued") or p:GetAttribute("RiftDuelId") then return end
-  if aim==1 or aim==3 then
+  if action=="kit" then
+   if aim==1 or aim==2 or aim==3 then p:SetAttribute("RiftKit",aim) end
+  elseif table.find(weapons.Loadouts[1],aim) then
    p:SetAttribute("RiftPrimary",aim)
-  elseif aim==2 or aim==4 then
+  elseif table.find(weapons.Loadouts[2],aim) then
    p:SetAttribute("RiftSecondary",aim)
   end
   return
@@ -113264,7 +113554,7 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot)
  local duel=p:GetAttribute("RiftDuelId")
  local effectParent=workspace
  if duel then
-  if p:GetAttribute("RiftDuelPhase")~="Fight" then return end
+  if p:GetAttribute("RiftDuelPhase")~="Fight" or not p:GetAttribute("RiftRoundAlive") then return end
   local arena=workspace.RiftDuels:FindFirstChild(p:GetAttribute("RiftDuelArena") or "")
   effectParent=arena and arena:FindFirstChild("RoundEffects")
   if not effectParent then return end
@@ -113296,7 +113586,8 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot)
   end)
   return
  end
- if action~="fire" and not cooldown[action] then return end
+ if typeof(action)~="string" or (action~="fire" and not cooldown[action]) then return end
+ if duel and action==weapons.Kits[p:GetAttribute("RiftKit") or 1].omitted then return end
  if typeof(aim)~="Vector3" or not (aim.Magnitude>.99 and aim.Magnitude<1.01) then return end
  local origin=head.Position
  local params=RaycastParams.new()
@@ -113306,7 +113597,6 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot)
   s.nextShot=now+weapon.shotInterval
   s.ammo[slot]-=1
   R:FireClient(p,"weaponState",slot,s.ammo[slot],false)
-  R:FireClient(p,"shot",weaponId)
   for _,other in P:GetPlayers() do
    if other~=p and sameCombatSpace(p,other) then
     local otherHead=other.Character and other.Character:FindFirstChild("Head")
@@ -113315,26 +113605,29 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot)
     end
    end
   end
-  local hit=workspace:Raycast(origin,aim*weapon.range,params)
-  local dest=hit and hit.Position or origin+aim*weapon.range
-  local start=origin-Vector3.new(0,.55,0)
-  local length=(dest-start).Magnitude
-  if length>.01 then
-   local t=effect(effectParent,(start+dest)/2,Vector3.new(.065,.065,length),Color3.fromRGB(255,209,104),0,.075,false)
-   t.CFrame=CFrame.lookAt(t.Position,dest)
+  local spread=aiming==true and weapon.ads or weapon.hip
+  if p:GetAttribute("RiftSprinting") or p:GetAttribute("RiftSliding") then spread=math.max(weapon.hip,spread)*1.45 end
+  local hits={}
+  for pellet=1,(weapon.pellets or 1) do
+   local direction=aimWithSpread(aim,spread)
+   local hit=workspace:Raycast(origin,direction*weapon.range,params)
+   local dest=hit and hit.Position or origin+direction*weapon.range
+   if pellet==1 then trace(effectParent,origin,dest) end
+   if weapon.blastRadius then
+    blast(p,effectParent,hit and dest+hit.Normal*.15 or dest,weapon)
+   elseif hit then
+    local model=hit.Instance:FindFirstAncestorOfClass("Model")
+    if model then
+     local headshot=hit.Instance.Name=="Head"
+     local info=hits[model] or {amount=0,headshot=false}
+     local falloff=weapon.pellets and math.clamp(1.2-hit.Distance/weapon.range,.22,1) or 1
+     info.amount+=weapon.bodyDamage*(headshot and weapon.headMultiplier or 1)*falloff
+     info.headshot=info.headshot or headshot
+     hits[model]=info
+    end
+   end
   end
-  local model=hit and hit.Instance:FindFirstAncestorOfClass("Model")
-  local target=model and model:FindFirstChildOfClass("Humanoid")
-  local opponent=model and P:GetPlayerFromCharacter(model)
-  local allowed=opponent and sameCombatSpace(p,opponent)
-  if not opponent and model and not duel then
-   allowed=model.Parent==workspace.RiftArena.Targets
-  end
-  if allowed and target and target.Health>0 then
-   target:TakeDamage(hit.Instance.Name=="Head" and weapon.headDamage or weapon.bodyDamage)
-   R:FireClient(p,"hit",hit.Instance.Name=="Head")
-   if opponent then R:FireClient(opponent,"damageFrom",origin) end
-  end
+  for model,info in hits do damage(p,model,info.amount,info.headshot,origin) end
   return
  end
  if now<(s.ready[action] or 0) then return end
@@ -113368,7 +113661,7 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot)
    if S[p]~=s or (duel and not effectParent.Parent) then return end
    local targets={}
    for _,other in P:GetPlayers() do
-    if other~=p and other.Character and sameCombatSpace(p,other) then table.insert(targets,other.Character) end
+    if other~=p and other.Character and enemy(p,other) then table.insert(targets,other.Character) end
    end
    if not duel then
     for _,bot in workspace.RiftArena.Targets:GetChildren() do table.insert(targets,bot) end
@@ -113483,233 +113776,381 @@ end)
 		</Item>
 		<Item class="Script" referent="RBX2d6e7b5e7e6d4f9cbfd0ea24cf2e324e">
 			<Properties>
-				<ProtectedString name="Source"><![CDATA[local Players = game:GetService("Players")
-local remote = game.ReplicatedStorage.RiftQueue
-local resetCombat = script.Parent.RiftResetCombat
-local lobby = workspace.RiftLobby
-local arenas = workspace.RiftDuels:GetChildren()
-table.sort(arenas, function(a,b) return a.Name < b.Name end)
+				<ProtectedString name="Source"><![CDATA[local Players=game:GetService("Players")
+local Http=game:GetService("HttpService")
+local remote=game.ReplicatedStorage.RiftQueue
+local resetCombat=script.Parent.RiftResetCombat
+local eliminated=script.Parent.RiftElimination
+local lobby=workspace.RiftLobby
+local arenas=workspace.RiftDuels:GetChildren()
+table.sort(arenas,function(a,b) return a.Name<b.Name end)
 
-local WINS_REQUIRED = 3
-local ROUND_SECONDS = 60
-local queue = {}
-local occupied = {}
-local matches = {}
-local requestAt = {}
-local lastArena = 0
-local nextId = 0
+local winsRequired=5
+local roundSeconds=40
+local queues={{},{},{}}
+local queued={}
+local occupied={}
+local matches={}
+local requestAt={}
+local nextId=0
+local votingMatch
 
 local function living(player)
- local character = player.Character
- local humanoid = character and character:FindFirstChildOfClass("Humanoid")
- local root = character and character:FindFirstChild("HumanoidRootPart")
- if humanoid and humanoid.Health > 0 and root then
-  return character, humanoid, root
- end
+ local character=player.Character
+ local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+ local root=character and character:FindFirstChild("HumanoidRootPart")
+ if humanoid and humanoid.Health>0 and root then return character,humanoid,root end
 end
 
 local function returnToLobby(player)
- if player.Parent ~= Players then return end
- player:SetAttribute("RiftMap", "Lobby")
- local character, humanoid, root = living(player)
+ player:SetAttribute("RiftMap","Lobby")
+ local character,humanoid,root=living(player)
  if character then
-  local spawn = lobby.LobbySpawn.CFrame
-  character:PivotTo(spawn + Vector3.new(0,3,0))
-  root.AssemblyLinearVelocity = Vector3.zero
-  root.Anchored = false
-  humanoid.Health = humanoid.MaxHealth
+  character:PivotTo(lobby.LobbySpawn.CFrame+Vector3.new(0,3,0))
+  root.AssemblyLinearVelocity=Vector3.zero
+  root.Anchored=false
+  humanoid.Health=humanoid.MaxHealth
   resetCombat:Fire(player)
  end
 end
 
-local function removeFromQueue(player)
- local index = table.find(queue, player)
- if index then table.remove(queue, index) end
- player:SetAttribute("RiftQueued", false)
+local function broadcastQueue(size)
+ workspace:SetAttribute("RiftQueueCount"..size,#queues[size])
 end
 
-local function status(match, phase, seconds, message)
- match.phase = phase
- local deadline = workspace:GetServerTimeNow() + seconds
- for index, player in match.players do
-  if player.Parent == Players then
-   player:SetAttribute("RiftDuelPhase", phase)
-   player:SetAttribute("RiftDuelDeadline", deadline)
-   player:SetAttribute("RiftDuelScore", string.format("%d  –  %d", match.score[index], match.score[3-index]))
-   player:SetAttribute("RiftDuelMessage", message)
-  end
+local function removeFromQueue(player)
+ local size=queued[player]
+ if size then
+  local index=table.find(queues[size],player)
+  if index then table.remove(queues[size],index) end
+  queued[player]=nil
+  broadcastQueue(size)
+ end
+ player:SetAttribute("RiftQueued",false)
+end
+
+local function scoreboard(match)
+ local rows={}
+ for _,player in match.players do
+  local stats=match.stats[player]
+  table.insert(rows,{
+   name=player.DisplayName,
+   team=match.teams[player],
+   kills=stats.kills,
+   deaths=stats.deaths,
+   wins=player:GetAttribute("RiftMatchWins") or 0,
+  })
+ end
+ local data=Http:JSONEncode(rows)
+ for _,player in match.players do
+  if player.Parent==Players then player:SetAttribute("RiftScoreboard",data) end
+ end
+end
+
+local function status(match,phase,seconds,message,winner)
+ match.phase=phase
+ local deadline=workspace:GetServerTimeNow()+seconds
+ for _,player in match.players do
+  if player.Parent~=Players then continue end
+  local team=match.teams[player]
+  player:SetAttribute("RiftDuelPhase",phase)
+  player:SetAttribute("RiftDuelDeadline",deadline)
+  player:SetAttribute("RiftDuelScore",string.format("%d  –  %d",match.score[team],match.score[3-team]))
+  player:SetAttribute("RiftDuelMessage",phase=="Finished" and winner and (team==winner and "VICTORY" or "DEFEAT") or message)
  end
 end
 
 local function clearRound(match)
- for _, connection in match.deaths do connection:Disconnect() end
+ for _,connection in match.deaths do connection:Disconnect() end
  table.clear(match.deaths)
+ for _,player in match.players do
+  match.alive[player]=nil
+  if player.Parent==Players then player:SetAttribute("RiftRoundAlive",false) end
+ end
  if match.effects then
   match.effects:Destroy()
-  match.effects = nil
+  match.effects=nil
  end
 end
 
-local function finish(match, message)
- if match.phase == "Finished" then return end
+local function finish(match,message,winner)
+ if match.phase=="Finished" then return end
+ if votingMatch==match then votingMatch=nil end
  clearRound(match)
- status(match, "Finished", 3, message)
- task.delay(3, function()
-  for _, player in match.players do
-   matches[player] = nil
-   if player.Parent == Players then
-    player:SetAttribute("RiftDuelId", nil)
-    player:SetAttribute("RiftDuelPhase", nil)
-    player:SetAttribute("RiftDuelArena", nil)
-    returnToLobby(player)
+ if winner then
+  for _,player in match.players do
+   if player.Parent==Players and match.teams[player]==winner then
+    player:SetAttribute("RiftMatchWins",(player:GetAttribute("RiftMatchWins") or 0)+1)
    end
   end
-  occupied[match.arena] = nil
+ end
+ status(match,"Finished",4,message,winner)
+ scoreboard(match)
+ task.delay(4,function()
+  for _,player in match.players do
+   matches[player]=nil
+   if player.Parent~=Players then continue end
+   for _,attribute in {"RiftDuelId","RiftDuelPhase","RiftDuelArena","RiftTeam","RiftVoteMaps","RiftScoreboard","RiftRoundAlive"} do
+    player:SetAttribute(attribute,nil)
+   end
+   returnToLobby(player)
+  end
+  if match.arena then occupied[match.arena]=nil end
  end)
 end
 
 local startRound
-
-local function endRound(match, winner)
- if match.phase ~= "Fight" then return end
+local function endRound(match,winner)
+ if match.phase~="Fight" then return end
  clearRound(match)
- local message = "Round drawn"
+ local message="Round drawn"
  if winner then
-  match.score[winner] += 1
-  message = match.players[winner].DisplayName .. " wins the round"
-  if match.score[winner] >= WINS_REQUIRED then
-   finish(match, match.players[winner].DisplayName .. " wins the duel")
+  match.score[winner]+=1
+  message=winner==1 and "Blue wins the round" or "Orange wins the round"
+  if match.score[winner]>=winsRequired then
+   finish(match,message,winner)
    return
   end
  end
- if match.round >= 9 then
-  local a, b = match.score[1], match.score[2]
-  finish(match, a == b and "Duel drawn" or (match.players[a > b and 1 or 2].DisplayName .. " wins the duel"))
-  return
- end
- status(match, "Intermission", 4, message)
- task.delay(4, function()
-  if match.phase == "Intermission" then startRound(match) end
+ status(match,"Intermission",3.5,message)
+ task.delay(3.5,function()
+  if match.phase=="Intermission" then startRound(match) end
  end)
 end
 
-startRound = function(match)
- match.round += 1
- status(match, "Preparing", 0, "Preparing round " .. match.round)
- local limit = os.clock() + 12
+local function liveTotals(match)
+ local count={0,0}
+ local health={0,0}
+ for _,player in match.players do
+  if not match.alive[player] or player.Parent~=Players then continue end
+  local _,humanoid=living(player)
+  if humanoid then
+   local team=match.teams[player]
+   count[team]+=1
+   health[team]+=humanoid.Health
+  end
+ end
+ return count,health
+end
+
+local function resolveElimination(match)
+ if match.phase~="Fight" then return end
+ local count=liveTotals(match)
+ if count[1]==0 or count[2]==0 then
+  local winner
+  if count[1]~=count[2] then winner=count[1]>0 and 1 or 2 end
+  endRound(match,winner)
+ end
+end
+
+startRound=function(match)
+ match.round+=1
+ status(match,"Preparing",0,"Preparing round "..match.round)
  local function ready()
-  for _, player in match.players do
-   if not living(player) then return false end
+  for _,player in match.players do
+   if player.Parent==Players and not living(player) then return false end
   end
   return true
  end
- while match.phase == "Preparing" and not ready() and os.clock() < limit do
-  task.wait(.2)
- end
- if match.phase ~= "Preparing" then return end
- if not ready() then
-  finish(match, "Duel ended · player could not respawn")
-  return
- end
- local spawns = {match.arena:GetAttribute("SpawnA"), match.arena:GetAttribute("SpawnB")}
- local roots = {}
- for index, player in match.players do
-  local character, humanoid, root = living(player)
-  character:PivotTo(CFrame.lookAt(spawns[index], spawns[3-index]))
-  root.AssemblyLinearVelocity = Vector3.zero
-  root.Anchored = true
-  roots[index] = root
-  humanoid.Health = humanoid.MaxHealth
+ local limit=os.clock()+12
+ while match.phase=="Preparing" and not ready() and os.clock()<limit do task.wait(.15) end
+ if match.phase~="Preparing" then return end
+ if not ready() then finish(match,"Match ended · respawn timed out"); return end
+
+ local spawns={match.arena:GetAttribute("SpawnA"),match.arena:GetAttribute("SpawnB")}
+ local offsets={0,0}
+ local roots={}
+ for _,player in match.players do
+  if player.Parent~=Players then continue end
+  local team=match.teams[player]
+  local index=offsets[team]
+  offsets[team]+=1
+  local position=spawns[team]+Vector3.new((index-(match.size-1)*.5)*6,0,0)
+  local character,humanoid,root=living(player)
+  character:PivotTo(CFrame.lookAt(position,spawns[3-team]))
+  root.AssemblyLinearVelocity=Vector3.zero
+  root.Anchored=true
+  table.insert(roots,root)
+  humanoid.Health=humanoid.MaxHealth
   resetCombat:Fire(player)
-  match.deaths[index] = humanoid.Died:Connect(function()
-   if match.phase == "Fight" then
-    endRound(match, 3-index)
-   elseif match.phase == "Countdown" then
-    finish(match, match.players[3-index].DisplayName .. " wins by forfeit")
+  match.alive[player]=true
+  player:SetAttribute("RiftRoundAlive",true)
+  table.insert(match.deaths,humanoid.Died:Connect(function()
+   if not match.alive[player] then return end
+   match.alive[player]=nil
+   player:SetAttribute("RiftRoundAlive",false)
+   match.stats[player].deaths+=1
+   scoreboard(match)
+   task.defer(resolveElimination,match)
+  end))
+ end
+ status(match,"Countdown",2.5,"Round "..match.round)
+ task.wait(2.5)
+ for _,root in roots do if root.Parent then root.Anchored=false end end
+ if match.phase~="Countdown" then return end
+ local effects=Instance.new("Folder")
+ effects.Name="RoundEffects"
+ effects.Parent=match.arena
+ match.effects=effects
+ status(match,"Fight",roundSeconds,"Round "..match.round)
+ resolveElimination(match)
+ local round=match.round
+ task.delay(roundSeconds,function()
+  if match.phase~="Fight" or match.round~=round then return end
+  local alive,hp=liveTotals(match)
+  local winner
+  if alive[1]~=alive[2] then winner=alive[1]>alive[2] and 1 or 2
+  elseif math.abs(hp[1]-hp[2])>.01 then winner=hp[1]>hp[2] and 1 or 2 end
+  endRound(match,winner)
+ end)
+end
+
+local function voteData(match)
+ local counts={}
+ for player,map in match.votes do
+  if player.Parent==Players then counts[map]=(counts[map] or 0)+1 end
+ end
+ local data={}
+ for _,arena in match.options do table.insert(data,{name=arena.Name,count=counts[arena.Name] or 0}) end
+ return data
+end
+
+local function updateVote(match)
+ local encoded=Http:JSONEncode(voteData(match))
+ for _,player in match.players do
+  if player.Parent==Players then player:SetAttribute("RiftVoteMaps",encoded) end
+ end
+end
+
+local function startVote(match)
+ status(match,"Voting",8,"Vote for the arena")
+ updateVote(match)
+ task.delay(8,function()
+  if match.phase~="Voting" then return end
+  local results=voteData(match)
+  local leaders={}
+  local top=-1
+  for index,entry in results do
+   if entry.count>top then top=entry.count; table.clear(leaders) end
+   if entry.count==top then table.insert(leaders,index) end
+  end
+  local arena=match.options[leaders[math.random(#leaders)]]
+  match.arena=arena
+  occupied[arena]=match
+  votingMatch=nil
+  for _,player in match.players do
+   if player.Parent==Players then
+    player:SetAttribute("RiftDuelArena",arena.Name)
+    player:SetAttribute("RiftVoteMaps",nil)
    end
-  end)
- end
- status(match, "Countdown", 3, "Round " .. match.round)
- task.wait(3)
- for _, root in roots do
-  if root.Parent then root.Anchored = false end
- end
- if match.phase ~= "Countdown" then return end
- local effects = Instance.new("Folder")
- effects.Name = "RoundEffects"
- effects.Parent = match.arena
- match.effects = effects
- status(match, "Fight", ROUND_SECONDS, "Round " .. match.round)
- local round = match.round
- task.delay(ROUND_SECONDS, function()
-  if match.phase == "Fight" and match.round == round then endRound(match, nil) end
+  end
+  startRound(match)
  end)
 end
 
 local function matchmake()
- while #queue >= 2 do
-  local arena
-  for offset = 1, #arenas do
-   local index = (lastArena + offset - 1) % #arenas + 1
-   if not occupied[arenas[index]] then
-    lastArena = index
-    arena = arenas[index]
-    break
-   end
+ if votingMatch then return end
+ local free={}
+ for _,arena in arenas do if not occupied[arena] then table.insert(free,arena) end end
+ if #free==0 then return end
+ for size=3,1,-1 do
+  local queue=queues[size]
+  if #queue<size*2 then continue end
+  local match={size=size,players={},teams={},stats={},alive={},score={0,0},round=0,deaths={},options=free,votes={}}
+  votingMatch=match
+  nextId+=1
+  for index=1,size*2 do
+   local player=queue[1]
+   removeFromQueue(player)
+   table.insert(match.players,player)
+   local team=(index-1)%2+1
+   match.teams[player]=team
+   match.stats[player]={kills=0,deaths=0}
+   matches[player]=match
+   player:SetAttribute("RiftDuelId",nextId)
+   player:SetAttribute("RiftTeam",team)
+   player:SetAttribute("RiftMap",nil)
+   player:SetAttribute("RiftRoundAlive",false)
   end
-  if not arena then return end
-  local pair = {queue[1], queue[2]}
-  for _, player in pair do removeFromQueue(player) end
-  nextId += 1
-  local match = {players=pair, arena=arena, score={0,0}, round=0, deaths={}}
-  occupied[arena] = match
-  for _, player in pair do
-   matches[player] = match
-   player:SetAttribute("RiftDuelId", nextId)
-   player:SetAttribute("RiftDuelArena", arena.Name)
-   player:SetAttribute("RiftMap", nil)
-  end
-  task.spawn(startRound, match)
+  scoreboard(match)
+  startVote(match)
+  return
  end
 end
 
-local function toggleQueue(player)
- if matches[player] or player:GetAttribute("RiftMap") ~= "Lobby" then return end
- local _, _, root = living(player)
- if not root or (root.Position-lobby.LobbySpawn.Position).Magnitude > 84 then return end
- local now = os.clock()
- if now - (requestAt[player] or -10) < .5 then return end
- requestAt[player] = now
- if table.find(queue, player) then
+local function toggleQueue(player,size)
+ if matches[player] or player:GetAttribute("RiftMap")~="Lobby" then return end
+ if size~=1 and size~=2 and size~=3 then return end
+ local _,_,root=living(player)
+ if not root or (root.Position-lobby.LobbySpawn.Position).Magnitude>84 then return end
+ local now=os.clock()
+ if now-(requestAt[player] or -10)<.5 then return end
+ requestAt[player]=now
+ if queued[player] then
   removeFromQueue(player)
  else
-  table.insert(queue, player)
-  player:SetAttribute("RiftQueued", true)
+  table.insert(queues[size],player)
+  queued[player]=size
+  player:SetAttribute("RiftQueueSize",size)
+  player:SetAttribute("RiftQueued",true)
+  broadcastQueue(size)
   matchmake()
  end
 end
 
 local function bind(player)
- if player:GetAttribute("RiftMap") == nil then player:SetAttribute("RiftMap", "Lobby") end
- player.CharacterAdded:Connect(function()
-  removeFromQueue(player)
- end)
+ if player:GetAttribute("RiftMap")==nil then player:SetAttribute("RiftMap","Lobby") end
+ player.CharacterAdded:Connect(function() removeFromQueue(player) end)
 end
 Players.PlayerAdded:Connect(bind)
-for _, player in Players:GetPlayers() do bind(player) end
+for _,player in Players:GetPlayers() do bind(player) end
 Players.PlayerRemoving:Connect(function(player)
  removeFromQueue(player)
- requestAt[player] = nil
- local match = matches[player]
- if match and match.phase ~= "Finished" then
-  local other = match.players[1] == player and match.players[2] or match.players[1]
-  finish(match, other.DisplayName .. " wins by forfeit")
+ requestAt[player]=nil
+ local match=matches[player]
+ if not match or match.phase=="Finished" then return end
+ match.alive[player]=nil
+ local team=match.teams[player]
+ for _,teammate in match.players do
+  if teammate~=player and teammate.Parent==Players and match.teams[teammate]==team then
+   resolveElimination(match)
+   return
+  end
+ end
+ finish(match,"Match ended by forfeit",3-team)
+end)
+
+eliminated.Event:Connect(function(attacker,victim)
+ local match=matches[attacker]
+ if not match or matches[victim]~=match or match.teams[attacker]==match.teams[victim] then return end
+ match.stats[attacker].kills+=1
+ scoreboard(match)
+end)
+
+remote.OnServerEvent:Connect(function(player,action,value)
+ if action=="mode" then
+  if not queued[player] and not matches[player] and player:GetAttribute("RiftMap")=="Lobby" and (value==1 or value==2 or value==3) then
+   player:SetAttribute("RiftQueueSize",value)
+  end
+ elseif action=="vote" then
+  local match=matches[player]
+  if not match or match.phase~="Voting" or typeof(value)~="string" then return end
+  for _,arena in match.options do
+   if arena.Name==value and match.votes[player]~=value then
+    match.votes[player]=value
+    updateVote(match)
+    return
+   end
+  end
+ elseif action==nil or action=="queue" then
+  toggleQueue(player,value or 1)
  end
 end)
-remote.OnServerEvent:Connect(toggleQueue)
-lobby.QueueTerminal.JoinDuel.Triggered:Connect(toggleQueue)
+lobby.QueueTerminal.JoinDuel.Triggered:Connect(function(player)
+ toggleQueue(player,player:GetAttribute("RiftQueueSize") or 1)
+end)
 task.spawn(function()
- while task.wait(1) do matchmake() end
+ while task.wait(.5) do matchmake() end
 end)
 ]]></ProtectedString>
 				<bool name="Disabled">false</bool>
