@@ -109534,6 +109534,7 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
  end
  fog.BackgroundTransparency=inside and .04 or 1
  local view=updateView(equipped,weaponId(equipped))
+ if weapon.name=="Fists" then modelFactory.recolorFists(view,P) end
  local showWeapon=alive and not menuOpen and P:GetAttribute("RiftDuelPhase")~="Voting"
  for _,model in pairs(views) do
   local parent=showWeapon and model==view and cam or nil
@@ -109691,6 +109692,14 @@ local leaders=hint(play,"")
 local arsenal=pages.Arsenal
 text(arsenal,"Your loadout",32,true,44)
 hint(arsenal,"Choose a weapon, then equip it. Changes are available in the lobby.")
+local activeCategory=1
+local categoryButtons={}
+local updateFilter=function() end
+local categoryRow=row(arsenal,48)
+for category,definition in ipairs(weapons.Slots) do
+ local b=UI.button(categoryRow,definition.label,0,0,44,48,function() activeCategory=category; updateFilter() end)
+ b.Position=UDim2.new((category-1)/4,0,0,0);b.Size=UDim2.new(.25,-6,1,0);b.TextSize=13;categoryButtons[category]=b
+end
 local searchRow=row(arsenal,48)
 local search=Instance.new("TextBox"); search.Name="WeaponSearch"; search.Size=UDim2.fromScale(1,1); search.BackgroundColor3=C.panel; search.TextColor3=C.text; search.PlaceholderColor3=C.text
 search.PlaceholderText="Search weapons"; search.Text=""; search.ClearTextOnFocus=false; search.Font=Enum.Font.Gotham; search.TextSize=16; search.Parent=searchRow; UI.surface(search); UI.padding(search,12)
@@ -109716,6 +109725,7 @@ local function refreshWeapon()
   local centre,size=previewModel:GetBoundingBox()
   camera.CFrame=CFrame.lookAt(centre.Position+Vector3.new(2.7,.5,-.9)*math.max(size.Z/3,.55),centre.Position)
  end
+ Models.recolorFists(previewModel,player)
  local slot=1 for category,ids in ipairs(weapons.Loadouts) do if table.find(ids,selected) then slot=category; break end end
  local category=slot
  weaponName.Text=w.name
@@ -109739,11 +109749,21 @@ for id,w in ipairs(weapons) do
  b.Size=UDim2.new(1,-8,0,48); b.LayoutOrder=id; weaponRows[id]=b
 end
 local empty=UI.text(scroll,"No weapons found. Try another name.",0,0,0,48,13); empty.Size=UDim2.new(1,-8,0,48); empty.Visible=false
-search:GetPropertyChangedSignal("Text"):Connect(function()
+updateFilter=function()
  local count=0
- for id,b in weaponRows do local w=weapons[id]; b.Visible=(w.name.." "..(w.class or w.short)):lower():find(search.Text:lower(),1,true)~=nil; if b.Visible then count+=1 end end
+ local first
+ for id,b in weaponRows do
+  local w=weapons[id]
+  b.Visible=table.find(weapons.Loadouts[activeCategory],id)~=nil and (w.name.." "..(w.class or w.short)):lower():find(search.Text:lower(),1,true)~=nil
+  if b.Visible then count+=1; first=first or id end
+ end
+ for category,b in categoryButtons do UI.select(b,category==activeCategory) end
  empty.Visible=count==0; scroll.CanvasPosition=Vector2.zero
-end)
+ if first and not weaponRows[selected].Visible then selected=first; refreshWeapon() end
+end
+search:GetPropertyChangedSignal("Text"):Connect(updateFilter)
+updateFilter()
+
 local abilities=pages.Abilities
 text(abilities,"Choose your tools",32,true,44)
 hint(abilities,"Pick a kit in the lobby. Movement is available with every kit.")
@@ -110683,9 +110703,9 @@ function Models.create(w)
    for _,side in {-1,1} do
     local x=side*.43
     box("Wrist wrap",.38,.34,.4,x,-.25,.05,paint,Enum.Material.Fabric)
-    ball("Padded glove",.46,.47,.57,x,.04,-.17,rubber,Enum.Material.SmoothPlastic)
-    for i=1,4 do ball("Knuckle",.105,.19,.22,x-.165+i*.07,.13,-.39,paint) end
-    ball("Thumb",.15,.28,.27,x-side*.22,-.02,-.12,rubber)
+    local fist=ball("Padded glove",.46,.47,.57,x,.04,-.17,rubber,Enum.Material.SmoothPlastic);fist:SetAttribute("ArmSide",side==1 and "Right" or "Left")
+    for i=1,4 do local knuckle=ball("Knuckle",.105,.19,.22,x-.165+i*.07,.13,-.39,paint);knuckle:SetAttribute("ArmSide",side==1 and "Right" or "Left") end
+    local thumb=ball("Thumb",.15,.28,.27,x-side*.22,-.02,-.12,rubber);thumb:SetAttribute("ArmSide",side==1 and "Right" or "Left")
     for i=1,3 do box("Wrap seam",.39,.018,.41,x,-.4+i*.065,.05,dark,Enum.Material.Fabric) end
     box("Wrist badge",.21,.13,.02,x,-.25,-.16,trim)
    end
@@ -110861,6 +110881,19 @@ function Models.create(w)
  end
  model:SetAttribute("SightHeight",(family=="sniper" or family=="marksman") and .57 or ((family=="pistol" or family=="revolver") and .29 or (family=="launcher" and .58 or .52)))
  return model
+end
+function Models.recolorFists(model,player)
+ if not model or model.Name~="Fists" or not player then return end
+ local character=player.Character; if not character then return end
+ local colors=character:FindFirstChildOfClass("BodyColors")
+ for _,part in model:GetChildren() do
+  local side=part:GetAttribute("ArmSide")
+  if side then
+   local arm=character:FindFirstChild(side.."Hand") or character:FindFirstChild(side.." Arm") or character:FindFirstChild(side.."LowerArm")
+   if arm and arm:IsA("BasePart") then part.Color=arm.Color
+   elseif colors then part.Color=side=="Right" and colors.RightArmColor3 or colors.LeftArmColor3 end
+  end
+ end
 end
 return Models
 </ProtectedString></Properties></Item>
