@@ -109109,7 +109109,7 @@ local C=UI.C
 local Audio=require(game.ReplicatedStorage:WaitForChild("RiftAudio"))
 local soundGroup=Audio.Effects
 game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Health,false)
-local gui=Instance.new("ScreenGui"); gui.Name="RiftHUD"; gui.ResetOnSpawn=false; gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets; gui.Parent=P:WaitForChild("PlayerGui")
+local gui=Instance.new("ScreenGui"); gui.Name="RiftHUD"; gui.ResetOnSpawn=false; gui.ScreenInsets=Enum.ScreenInsets.None; gui.IgnoreGuiInset=true; gui.Parent=P:WaitForChild("PlayerGui")
 local function label(size,pos,anchor,caption,fontSize)
  local l=Instance.new("TextLabel"); l.Size=size; l.Position=pos; l.AnchorPoint=anchor
  l.BackgroundColor3=C.panel; l.BackgroundTransparency=.08; UI.corner(l,8)
@@ -109315,7 +109315,7 @@ local function resetLoadout()
 end
 local function request(action)
  local cam=workspace.CurrentCamera
- if cam then R:FireServer(action,cam.CFrame.LookVector,equipped,aiming and not P:GetAttribute("RiftSprinting")) end
+ if cam then R:FireServer(action,cam.CFrame.LookVector,equipped,aiming and not P:GetAttribute("RiftSprinting"),cam.CFrame.Position) end
 end
 local function fire(now)
  if now&lt;nextShot or rounds&lt;=0 or reloading then return end
@@ -109554,14 +109554,15 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
   end
  end
  local stride=math.min(horizontal/24,1)*(1-aimBlend)
- local bobX=math.sin(now*(sprinting and 15 or 10))*.035*stride
- local bobY=math.cos(now*(sprinting and 30 or 20))*.032*stride
+ local bobX=math.sin(now*(sprinting and 15 or 10))*.035*stride*(1-aimBlend)
+ local bobY=math.cos(now*(sprinting and 30 or 20))*.032*stride*(1-aimBlend)
  local distance=weapons.Slots[equipped].category==1 and -1.45 or -1.15
  local x=.52*(1-aimBlend)+bobX
- local y=-.52+.37*aimBlend-.49*reloadBlend-.55*equipBlend+bobY
+ local sight=view:GetAttribute("SightHeight") or .43
+ local y=-.52*(1-aimBlend)-sight*aimBlend-.49*reloadBlend-.55*equipBlend*(1-aimBlend)+bobY
  local swing=weapon.melee and math.sin(math.clamp((now-strikeAt)/weapon.shotInterval,0,1)*math.pi) or 0
  local base=cam.CFrame*CFrame.new(x-swing*.35,y+swing*.12,distance+kick+.1*aimBlend-swing*.4)*CFrame.Angles(0,swing*.45,-swing*.6)
-  *CFrame.Angles(-.35*reloadBlend-.26*equipBlend,0,.22*reloadBlend-.12*equipBlend)
+  *CFrame.Angles(-.35*reloadBlend-.26*equipBlend*(1-aimBlend),0,.22*reloadBlend-.12*equipBlend*(1-aimBlend))
  for _,p in view:GetChildren() do p.CFrame=base*(p:GetAttribute("LocalCFrame") or (CFrame.new(p:GetAttribute("Offset"))*CFrame.Angles(0,p:GetAttribute("Yaw") or 0,0))) end
 end)</ProtectedString>
 					<bool name="Disabled">false</bool>
@@ -110622,6 +110623,30 @@ function Models.create(w)
   p.CFrame=cf;p.Parent=model;return p
  end
  local function box(n,x,y,z,px,py,pz,c,m,r) return shape(n,Vector3.new(x,y,z),Vector3.new(px,py,pz),c,m,r) end
+ local rawBox=box
+ local rounded={ ["Upper receiver"]=true,["Lower receiver"]=true,["Slide"]=true,["Frame"]=true,["Engine housing"]=true,["Lower crankcase"]=true,["Case body"]=true,["Lid"]=true,["Adjustable stock"]=true,["Recoil pad"]=true,["Moulded grip"]=true,["Shield core"]=true,["Forged head"]=true,["Belt box"]=true,["Magazine"]=true,["Handguard"]=true,["Rear handle"]=true }
+ box=function(n,x,y,z,px,py,pz,c,m,r)
+  if not rounded[n] or math.min(x,y,z)&lt;.11 then return rawBox(n,x,y,z,px,py,pz,c,m,r) end
+  local radius=math.min(.045,math.min(x,y,z)*.18)
+  local cf=CFrame.new(px,py,pz)*(r or CFrame.identity)
+  local function piece(suffix,size,offset,rotation,kind)
+   local localCF=cf*CFrame.new(offset)*(rotation or CFrame.identity)
+   local p=shape(n..suffix,size,localCF.Position,c,m,localCF.Rotation)
+   if kind then p.Shape=kind end
+   return p
+  end
+  local core=piece(" centre",Vector3.new(x-2*radius,y-2*radius,z),Vector3.zero)
+  piece(" horizontal face",Vector3.new(x-2*radius,y,z-2*radius),Vector3.zero)
+  piece(" vertical face",Vector3.new(x,y-2*radius,z-2*radius),Vector3.zero)
+  local half=Vector3.new(x/2-radius,y/2-radius,z/2-radius)
+  for _,a in {-1,1} do for _,b in {-1,1} do
+   piece(" rounded X edge",Vector3.new(x-2*radius,2*radius,2*radius),Vector3.new(0,a*half.Y,b*half.Z),nil,Enum.PartType.Cylinder)
+   piece(" rounded Y edge",Vector3.new(y-2*radius,2*radius,2*radius),Vector3.new(a*half.X,0,b*half.Z),CFrame.Angles(0,0,math.pi/2),Enum.PartType.Cylinder)
+   piece(" rounded Z edge",Vector3.new(z-2*radius,2*radius,2*radius),Vector3.new(a*half.X,b*half.Y,0),CFrame.Angles(0,math.pi/2,0),Enum.PartType.Cylinder)
+   for _,d in {-1,1} do piece(" corner",Vector3.one*(2*radius),Vector3.new(a*half.X,b*half.Y,d*half.Z),nil,Enum.PartType.Ball) end
+  end end
+  return core
+ end
  local function tube(n,length,diameter,x,y,z,c,axis)
   local r=axis=="x" and CFrame.identity or axis=="y" and CFrame.Angles(0,0,math.pi/2) or CFrame.Angles(0,math.pi/2,0)
   local p=shape(n,Vector3.new(length,diameter,diameter),Vector3.new(x,y,z),c,Enum.Material.Metal,r);p.Shape=Enum.PartType.Cylinder;return p
@@ -110647,9 +110672,9 @@ function Models.create(w)
   box("Curved trigger",.04,.13,.045,0,y-.05,z+.035,steel,Enum.Material.Metal,CFrame.Angles(.25,0,0))
  end
  local function ring(n,cx,cy,cz,radius,axis,c)
-  for i=0,11 do local a=i*math.pi/6
-   if axis=="x" then box(n,.035,.05,radius*.54,cx,cy+math.cos(a)*radius,cz+math.sin(a)*radius,c,nil,CFrame.Angles(a,0,0))
-   else box(n,radius*.54,.045,.035,cx+math.cos(a)*radius,cy+math.sin(a)*radius,cz,c,nil,CFrame.Angles(0,0,a+math.pi/2)) end
+  for i=0,63 do local a=i*math.pi/32
+   if axis=="x" then box(n,.035,.05,radius*.1045,cx,cy+math.cos(a)*radius,cz+math.sin(a)*radius,c,nil,CFrame.Angles(a,0,0))
+   else box(n,radius*.1045,.045,.035,cx+math.cos(a)*radius,cy+math.sin(a)*radius,cz,c,nil,CFrame.Angles(0,0,a+math.pi/2)) end
   end
  end
  local name,family=w.name,w.family
@@ -110783,7 +110808,7 @@ function Models.create(w)
    box("Ejection port",.015,.12,.22,.153,.13,-.14,dark)
    for _,side in {-1,1} do for i=0,5 do box("Slide serration",.016,.16,.025,side*.15,.13,.03+i*.045,steel) end;bolt(side*.15,-.06,.16) end
    box("Magazine shoe",.29,.06,.3,0,-.61,.12,dark)
-   box("Rear sight",.23,.07,.08,0,.29,.14,dark);ball("Front sight dot",.04,.045,.04,0,.29,-.55,trim)
+   for _,side in {-1,1} do box("Rear sight prong",.045,.07,.08,side*.1,.29,.14,dark) end;ball("Front sight dot",.04,.045,.04,0,.29,-.55,trim)
    if family=="revolver" then
     tube("Cylinder",.38,.41,0,.03,-.12,steel)
     for i=0,5 do local a=i*math.pi/3;tube("Chamber recess",.03,.07,math.cos(a)*.14,.03+math.sin(a)*.14,-.32,dark) end
@@ -110823,16 +110848,18 @@ function Models.create(w)
    end
    if sniper then
     box("Scope riser",.18,.12,.43,0,.4,-.1,dark)
-    tube("Scope body",.7,.25,0,.57,-.12,dark)
-    for _,z in {-.4,.14} do tube("Scope bell",.13,.34,0,.57,z,paint) end
-    local lens=tube("Coated objective",.015,.27,0,.57,-.475,Color3.fromRGB(81,155,166));lens.Material=Enum.Material.Glass;lens.Transparency=.22
+    local body=tube("Scope body",.7,.25,0,.57,-.12,dark);body.Transparency=1
+    for _,z in {-.42,-.12,.17} do ring("Hollow scope tube",0,.57,z,.125,"z",dark) end
+    for _,z in {-.4,.14} do local bell=tube("Scope bell",.13,.34,0,.57,z,paint);bell.Transparency=1; ring("Scope bell rim",0,.57,z,.17,"z",paint) end
+    local lens=tube("Coated objective",.015,.27,0,.57,-.475,Color3.fromRGB(81,155,166));lens.Material=Enum.Material.Glass;lens.Transparency=.8
     tube("Elevation turret",.13,.15,0,.77,-.11,steel,"y")
     tube("Windage turret",.12,.14,.17,.57,-.11,steel,"x")
    else
-    box("Rear sight",.23,.12,.12,0,.44,.18,dark);box("Front sight post",.045,.16,.07,0,.43,-.93,dark)
+    for _,side in {-1,1} do box("Rear sight prong",.045,.16,.12,side*.1,.47,.18,dark) end;box("Front sight post",.045,.16,.07,0,.43,-.93,dark)
    end
   end
  end
+ model:SetAttribute("SightHeight",(family=="sniper" or family=="marksman") and .57 or ((family=="pistol" or family=="revolver") and .29 or (family=="launcher" and .58 or .52)))
  return model
 end
 return Models
@@ -111293,6 +111320,57 @@ function Items.Use(x,alt)
  end
 end
 return Items
+</ProtectedString></Properties></Item><Item class="ModuleScript" referent="RIFT_EXTRA_RiftMapDetails"><Properties><string name="Name">RiftMapDetails</string><ProtectedString name="Source">-- Cosmetic geometry is separate from gameplay collision and raycast cover.
+local Details={}
+function Details.Build()
+ local roots={workspace.RiftLobby,workspace.RiftArena}
+ for _,map in workspace.RiftMaps:GetChildren() do table.insert(roots,map) end
+ for _,map in workspace.RiftDuels:GetChildren() do table.insert(roots,map) end
+ local total=0
+ for _,root in roots do
+  local old=root:FindFirstChild("ArchitecturalDetail"); if old then old:Destroy() end
+  local folder=Instance.new("Folder");folder.Name="ArchitecturalDetail"
+  local count=0
+  local function part(name,size,cf,color,material,cylinder)
+   if count&gt;=240 then return end
+   local p=Instance.new("Part");p.Name=name;p.Size=size;p.CFrame=cf;p.Color=color;p.Material=material;p.Anchored=true;p.CanCollide=false;p.CanTouch=false;p.CanQuery=false;p.CastShadow=false
+   if cylinder then p.Shape=Enum.PartType.Cylinder end
+   p.TopSurface=Enum.SurfaceType.Smooth;p.BottomSurface=Enum.SurfaceType.Smooth;p.Parent=folder;count+=1
+  end
+  local source={}
+  for _,p in root:GetDescendants() do if p:IsA("BasePart") and not p:FindFirstAncestor("Targets") and not p:IsA("SpawnLocation") then table.insert(source,p) end end
+  -- Put architectural surfaces first; avoid spending detail on flat floor slabs.
+  table.sort(source,function(a,b) local av=a.Size.Y&gt;5 and a.Size.X*a.Size.Y or 0;local bv=b.Size.Y&gt;5 and b.Size.X*b.Size.Y or 0;return av&gt;bv end)
+  for _,p in source do
+   local size=p.Size
+   if size.Y&gt;5 and size.Y&lt;50 and size.X&gt;4 and math.abs(p.CFrame.UpVector.Y)&gt;.99 then
+    local stone=p.Color:Lerp(Color3.fromRGB(158,164,164),.18)
+    local seam=p.Color:Lerp(Color3.fromRGB(28,35,42),.28)
+    for _,side in {-1,1} do
+     local z=side*(size.Z*.5+.025)
+     part("Bevelled foundation trim",Vector3.new(size.X+.12,.22,.15),p.CFrame*CFrame.new(0,-size.Y*.5+.2,z),stone,p.Material)
+     part("Facade crown",Vector3.new(size.X+.18,.14,.18),p.CFrame*CFrame.new(0,size.Y*.5-.08,z),stone,p.Material)
+     for y=-size.Y*.5+2,size.Y*.5-1,2 do
+      part("Horizontal masonry joint",Vector3.new(size.X,.028,.035),p.CFrame*CFrame.new(0,y,z),seam,Enum.Material.Concrete)
+     end
+     for x=-size.X*.5+4,size.X*.5-2,6 do
+      part("Facade panel joint",Vector3.new(.035,size.Y-.5,.04),p.CFrame*CFrame.new(x,0,z),seam,Enum.Material.Concrete)
+      part("Metal corner fixing",Vector3.new(.045,.15,.15),p.CFrame*CFrame.new(x,-size.Y*.5+.65,z)*CFrame.Angles(0,math.pi/2,0),Color3.fromRGB(119,128,133),Enum.Material.Metal,true)
+     end
+    end
+   elseif p.Name:lower():find("rock") then
+    local small=math.min(size.X,size.Z)*.14
+    for i=1,3 do
+     part("Weathered rock fragment",Vector3.new(small,small*.65,small*.9),p.CFrame*CFrame.new((i-2)*small, -size.Y*.4,size.Z*.5),p.Color:Lerp(Color3.fromRGB(167,153,127),.12),Enum.Material.Rock)
+    end
+   end
+   if count&gt;=240 then break end
+  end
+  folder.Parent=root;total+=count;task.wait()
+ end
+ return total
+end
+return Details
 </ProtectedString></Properties></Item></Item>
 	<Item class="ServerScriptService" referent="RBX25e400ec60334f34bcfd868bbdaea316">
 		<Properties>
@@ -111316,7 +111394,8 @@ return Items
 			<Properties>
 				<string name="Name">RiftMovement</string>
 				<bool name="Disabled">false</bool>
-				<ProtectedString name="Source">local players=game:GetService("Players")
+				<ProtectedString name="Source">require(game.ReplicatedStorage:WaitForChild("RiftMapDetails")).Build()
+local players=game:GetService("Players")
 local run=game:GetService("RunService")
 local remote=game.ReplicatedStorage.RiftAction
 local reset=script.Parent.RiftResetCombat
@@ -111652,7 +111731,7 @@ local function blast(attacker,parent,position,weapon,directTarget)
 end
 
 local cooldown={smoke=16,flash=12,recon=18}
-R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
+R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming,cameraOrigin)
  local s=S[p]; local c=p.Character
  local h=c and c:FindFirstChildOfClass("Humanoid")
  local head=c and c:FindFirstChild("Head")
@@ -111734,8 +111813,17 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
     end
    end
   end
-  local spread=aiming==true and weapon.ads or weapon.hip
-  if p:GetAttribute("RiftSprinting") or p:GetAttribute("RiftSliding") then spread=math.max(weapon.hip,spread)*1.45 end
+  local spread=weapon.pellets and (aiming==true and weapon.ads or weapon.hip) or 0
+  -- A camera ray chooses the crosshair target; the head ray still blocks firing through cover.
+  if not weapon.item and cameraOrigin~=nil then
+   if typeof(cameraOrigin)~="Vector3" or not ((cameraOrigin-origin).Magnitude&lt;=2) then return end
+   local between=workspace:Raycast(origin,cameraOrigin-origin,params)
+   if between then return end
+   local crosshairHit=workspace:Raycast(cameraOrigin,aim*weapon.range,params)
+   local target=crosshairHit and crosshairHit.Position or cameraOrigin+aim*weapon.range
+   local delta=target-origin
+   if delta.Magnitude&gt;.01 then aim=delta.Unit end
+  end
   if weapon.item then useItem(false); return end
   if weapon.grenade then
    local ball=Instance.new("Part"); ball.Name="RiftGrenade"; ball.Shape=Enum.PartType.Ball; ball.Size=Vector3.one*.65; ball.Color=Color3.fromRGB(65,90,62); ball.CFrame=CFrame.new(origin+aim*2); ball.CanCollide=true; ball.Parent=effectParent
@@ -111747,7 +111835,7 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
   local pellets=weapon.pellets or 1
   local pelletDamage=weapon.bodyDamage/pellets
   for pellet=1,pellets do
-   local direction=aimWithSpread(aim,spread)
+   local direction=pellet==1 and aim or aimWithSpread(aim,spread)
    local hit=workspace:Raycast(origin,direction*weapon.range,params)
    local dest=hit and hit.Position or origin+direction*weapon.range
    if pellet==1 then trace(effectParent,origin,dest) end
