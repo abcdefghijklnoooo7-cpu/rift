@@ -109265,6 +109265,7 @@ local function stopReloadSound()
  reloadFallback:Stop()
 end
 
+local strikeAt=0
 local ready={}
 local equipped=1
 local held=false
@@ -109322,6 +109323,7 @@ local function fire(now)
  local weapon=weapons[id]
  nextShot=now+weapon.shotInterval+.015
  request("fire")
+ strikeAt=now
  playShot(id)
  kick=weapon.recoil
  local cam=workspace.CurrentCamera
@@ -109329,7 +109331,10 @@ local function fire(now)
 end
 U.InputBegan:Connect(function(input,processed)
  if processed or P:GetAttribute("RiftMenuOpen") or not canFight() then return end
- if input.UserInputType==Enum.UserInputType.MouseButton2 then aiming=true end
+ if input.UserInputType==Enum.UserInputType.MouseButton2 then
+  if weapons[weaponId(equipped)].item then request("itemAlt") else aiming=true end
+ end
+ if input.KeyCode==Enum.KeyCode.Space and equipped==3 and weapons[weaponId(3)].name=="Fists" then request("itemAlt") end
  if input.UserInputType==Enum.UserInputType.MouseButton1 then
   held=weapons[weaponId(equipped)].automatic
   if rounds==0 and not reloading then emptySound:Play() else fire(os.clock()) end
@@ -109499,7 +109504,7 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
   damageArrow.Position=UDim2.new(.5,math.sin(angle)*82,.5,-math.cos(angle)*82)
   damageArrow.TextTransparency=1-damageAlpha
  end
- ammo.Text=reloading and "Reloading" or string.format("%02d / %02d",rounds,weapons[weaponId(equipped)].magazine)
+ ammo.Text=weapon.melee and "Melee" or (reloading and "Reloading" or string.format("%02d / %02d",rounds,weapons[weaponId(equipped)].magazine))
  for slot,chip in weaponSlots do
   local name=weapons[weaponId(slot)].short
   chip.Text=slot.."  "..name
@@ -109554,7 +109559,8 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
  local distance=weapons.Slots[equipped].category==1 and -1.45 or -1.15
  local x=.52*(1-aimBlend)+bobX
  local y=-.52+.37*aimBlend-.49*reloadBlend-.55*equipBlend+bobY
- local base=cam.CFrame*CFrame.new(x,y,distance+kick+.1*aimBlend)
+ local swing=weapon.melee and math.sin(math.clamp((now-strikeAt)/weapon.shotInterval,0,1)*math.pi) or 0
+ local base=cam.CFrame*CFrame.new(x-swing*.35,y+swing*.12,distance+kick+.1*aimBlend-swing*.4)*CFrame.Angles(0,swing*.45,-swing*.6)
   *CFrame.Angles(-.35*reloadBlend-.26*equipBlend,0,.22*reloadBlend-.12*equipBlend)
  for _,p in view:GetChildren() do p.CFrame=base*CFrame.new(p:GetAttribute("Offset"))*CFrame.Angles(0,p:GetAttribute("Yaw") or 0,0) end
 end)</ProtectedString>
@@ -109709,10 +109715,10 @@ local function refreshWeapon()
   local centre,size=previewModel:GetBoundingBox()
   camera.CFrame=CFrame.lookAt(centre.Position+Vector3.new(2.7,.5,-.9)*math.max(size.Z/3,.55),centre.Position)
  end
- local slot=table.find(weapons.Loadouts[1],selected) and 1 or 2
+ local slot=1 for category,ids in ipairs(weapons.Loadouts) do if table.find(ids,selected) then slot=category; break end end
  local category=slot
  weaponName.Text=w.name
- classLabel.Text=(slot==1 and "Primary" or "Secondary").." · "..(w.class or w.short)
+ classLabel.Text=weapons.Slots[slot].label.." · "..(w.class or w.short)
  description.Text=w.description or "Aim carefully and use cover between shots."
  stats.Text=w.directDamage and string.format("%d direct · %d splash · %d rounds · %.1fs reload",w.directDamage,w.bodyDamage,w.magazine,w.reloadTime) or string.format("%s damage · %d rounds · %.1fs reload",tostring(w.bodyDamage),w.magazine,w.reloadTime)
  for destination,b in equipButtons do
@@ -109725,7 +109731,7 @@ local function refreshWeapon()
  for id,b in weaponRows do UI.select(b,id==selected) end
 end
 for slot,definition in ipairs(weapons.Slots) do
- equipButtons[slot]=button(arsenal,"Equip to slot "..slot,function() if editable() then action:FireServer("loadout",selected,slot); Audio.Play("equip") end end,slot&lt;=2)
+ equipButtons[slot]=button(arsenal,"Equip to slot "..slot,function() if editable() then action:FireServer("loadout",selected,slot); Audio.Play("equip") end end,true)
 end
 for id,w in ipairs(weapons) do
  local b=UI.button(scroll,w.name,0,0,0,48,function() selected=id; refreshWeapon() end)
@@ -109769,7 +109775,7 @@ setting("Crosshair size","RiftCrosshair",1,.5,2,.25,"%.2fx")
 setting("Effects volume","RiftVolume",1,0,1,.1,"%.1fx")
 setting("Music volume","RiftMusicVolume",.5,0,1,.1,"%.1fx")
 text(settings,"Controls",20,true)
-hint(settings,"Aim: right mouse · Reload: R · Switch: 1 / 2 / 3 / 4 · Scoreboard: Tab · Menu: M")
+hint(settings,"Aim / item ability: right mouse · Fists double jump: Space · Reload: R · Switch: 1 / 2 / 3 / 4 · Scoreboard: Tab · Menu: M")
 hint(settings,"A live match keeps running while this menu is open.")
 -- The lobby shows navigation; matchmaking lives in the Play page.
 home=UI.frame(gui,"LobbyInterface",0,0,0,0); home.Size=UDim2.fromScale(1,1); home.BackgroundTransparency=1
@@ -109802,8 +109808,8 @@ refresh=function()
  leaders.Text="Session leaders: "..table.concat(names,", ")
  refreshWeapon()
 end
-for _,attribute in {"RiftPrimary","RiftSecondary","RiftPrimaryExtra","RiftSecondaryExtra","RiftKit","RiftQueued","RiftQueueSize","RiftDuelPhase","RiftSelectedMode","RiftMatchWins"} do
- player:GetAttributeChangedSignal(attribute):Connect(function() if attribute=="RiftPrimary" or attribute=="RiftSecondary" or attribute=="RiftPrimaryExtra" or attribute=="RiftSecondaryExtra" then loadoutEdited=true end; mode=player:GetAttribute("RiftSelectedMode") or mode; refresh() end)
+for _,attribute in {"RiftPrimary","RiftSecondary","RiftMelee","RiftUtility","RiftKit","RiftQueued","RiftQueueSize","RiftDuelPhase","RiftSelectedMode","RiftMatchWins"} do
+ player:GetAttributeChangedSignal(attribute):Connect(function() if attribute=="RiftPrimary" or attribute=="RiftSecondary" or attribute=="RiftMelee" or attribute=="RiftUtility" then loadoutEdited=true end; mode=player:GetAttribute("RiftSelectedMode") or mode; refresh() end)
 end
 for size=1,3 do workspace:GetAttributeChangedSignal("RiftQueueCount"..size):Connect(refresh) end
 player:GetAttributeChangedSignal("RiftMap"):Connect(function()
@@ -110598,7 +110604,7 @@ end)
 			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
 			<UniqueId name="UniqueId">3c83a70e7eb853630afca5dc000003bf</UniqueId>
 		</Properties>
-<Item class="ModuleScript" referent="RBXRiftWeaponModels"><Properties><string name="Name">RiftWeaponModels</string><ProtectedString name="Source"><![CDATA[-- Native, low-part-count geometry shared by first-person and arsenal previews.
+<Item class="ModuleScript" referent="RBXRiftWeaponModels"><Properties><string name="Name">RiftWeaponModels</string><ProtectedString name="Source">-- Native, low-part-count geometry shared by first-person and arsenal previews.
 local Models={}
 function Models.create(weapon)
  local model=Instance.new("Model"); model.Name=weapon.name
@@ -110617,7 +110623,28 @@ function Models.create(weapon)
  local function tube(name,length,width,x,y,z,color) return part(name,Vector3.new(length,width,width),Vector3.new(x,y,z),color,true) end
  local family=weapon.family
  local small=family=="pistol" or family=="revolver"
- if small then
+ if family=="melee" then
+  if weapon.short=="Fists" then
+   for _,x in {-0.4,0.4} do block("Fist",.36,.4,.45,x,0,-.2,finish); block("Cuff",.4,.16,.4,x,-.3,0,dark) end
+  elseif weapon.short=="Chainsaw" then
+   block("Motor",.55,.5,.65,0,0,.1,finish); block("Blade",.18,.36,1.5,0,.05,-.95,steel); block("Handle",.5,.1,.15,0,.4,.1,dark)
+   for i=1,8 do block("Tooth",.23,.1,.08,0,.26,-.35-i*.16,dark) end
+  elseif weapon.name=="Riot Shield" then block("Shield",1.25,1.7,.14,0,.2,-.6,finish); block("Window",.65,.2,.15,0,.6,-.69,steel)
+  else
+   block("Grip",.15,.5,.15,0,-.15,.1,dark)
+   local long=weapon.name=="Spear" or weapon.name=="Scythe"
+   block("Shaft",.12,.15,long and 2.4 or 1.2,0,.05,-.8,finish)
+   if weapon.name=="Maul" then block("Hammer",.9,.55,.45,0,.05,-1.5,steel)
+   elseif weapon.name=="Battle Axe" or weapon.name=="Scythe" then block("Curved blade",.9,.12,.7,.35,.05,-1.65,steel)
+   else block("Blade",weapon.name=="Trowel" and .5 or .22,.08,long and 1.0 or .7,0,.1,-1.4,steel) end
+  end
+ elseif family=="utility" then
+  local box=weapon.name=="RNG Dice" or weapon.name=="Medkit" or weapon.name=="Satchel" or weapon.name=="Jump Pad" or weapon.name=="Subspace Tripmine"
+  local shell=block(weapon.name,box and .85 or .55,box and .5 or .7,.55,0,0,-.2,finish); if not box then shell.Shape=Enum.PartType.Ball end
+  if weapon.name=="Medkit" then block("Cross",.5,.12,.06,0,0,-.5,Color3.fromRGB(220,65,65)); block("Cross vertical",.12,.4,.06,0,0,-.51,Color3.fromRGB(220,65,65)) end
+  if weapon.name=="Freeze Ray" or weapon.name=="Grappler" then tube("Emitter",.7,.25,0,.1,-.65,steel); block("Grip",.18,.4,.2,0,-.4,0,dark) end
+  block("Lever",.12,.15,.65,0,.4,-.2,steel)
+ elseif small then
   block("Slide",.25,.22,.78,0,.05,-.16,finish)
   block("Frame",.23,.12,.64,0,-.10,-.1,dark)
   block("Grip",.22,.38,.26,0,-.29,.12,dark)
@@ -110643,7 +110670,7 @@ function Models.create(weapon)
   block("Grip",.22,.4,.25,0,-.32,.27,dark)
   block("Foregrip",.18,.32,.22,0,-.36,-.65,dark)
   block("Leaf sight",.04,.24,.16,.13,.39,-.32,steel)
-  if weapon.magazine>1 then tube("Drum",.42,.66,0,-.3,-.1,steel) end
+  if weapon.magazine&gt;1 then tube("Drum",.42,.66,0,-.3,-.1,steel) end
  else
   local compact=family=="smg"
   local long=family=="sniper" or family=="marksman"
@@ -110681,7 +110708,7 @@ function Models.create(weapon)
  return model
 end
 return Models
-]]></ProtectedString></Properties></Item>
+</ProtectedString></Properties></Item>
 <Item class="ModuleScript" referent="RBXRiftUI"><Properties><string name="Name">RiftUI</string><ProtectedString name="Source">local Tween=game:GetService("TweenService")
 local Sound=game:GetService("SoundService")
 local UI={C=require(script.Parent:WaitForChild("RiftTheme"))}
@@ -110772,14 +110799,18 @@ return UI
  {name="Kestrel Heavy Pistol",short="Kestrel",family="pistol",magazine=8,shotInterval=0.34,reloadTime=1.25,automatic=false,range=330,bodyDamage=20,headMultiplier=1.6,hip=1.6,ads=0.35,zoom=0.84,recoil=0.24,pitchKick=1.8,shotSound="rbxassetid://98975838871911",soundPitch=0.88},
  {name="Nova Launcher",short="Nova",family="launcher",magazine=2,shotInterval=1.1,reloadTime=2.5,automatic=false,range=160,bodyDamage=40, directDamage=60,headMultiplier=1,hip=2,ads=0.85,zoom=0.86,recoil=0.38,pitchKick=3.2,shotSound="rbxasset://sounds/impact_explosion_03.mp3",soundPitch=1.8,blastRadius=15},
  {name="Drift Auto Shotgun",short="Drift",family="shotgun",magazine=8,shotInterval=0.38,reloadTime=2.2,automatic=true,range=90,bodyDamage=25,headMultiplier=1.3,hip=6.8,ads=4.5,zoom=0.9,recoil=0.21,pitchKick=2.1,shotSound="rbxassetid://71816202649396",soundPitch=1.2,pellets=7},
+ {name="Fists",short="Fists",family="melee",magazine=1,shotInterval=.45,reloadTime=1,automatic=false,range=7,bodyDamage=20,headMultiplier=1,hip=0,ads=0,zoom=1,recoil=.15,pitchKick=0,shotSound="rbxasset://sounds/action_jump.mp3",soundPitch=1.5,melee=true},
+ {name="Chainsaw",short="Chainsaw",family="melee",magazine=1,shotInterval=.16,reloadTime=1,automatic=true,range=8,bodyDamage=8,headMultiplier=1,hip=0,ads=0,zoom=1,recoil=.06,pitchKick=0,shotSound="rbxasset://sounds/action_footsteps_plastic.mp3",soundPitch=.7,melee=true},
+ {name="Grenade",short="Grenade",family="utility",magazine=1,shotInterval=1,reloadTime=8,automatic=false,range=100,bodyDamage=40,headMultiplier=1,hip=0,ads=0,zoom=1,recoil=.15,pitchKick=0,shotSound="rbxasset://sounds/action_jump.mp3",soundPitch=1,grenade=true,blastRadius=13},
+
 }
 
-weapons.Loadouts = {{1,3,5,6,7,9,10,11,12,13,14,15,19,20},{2,4,8,16,17,18}}
+weapons.Loadouts = {{1,3,5,6,7,9,10,11,12,13,14,15,19,20},{2,4,8,16,17,18},{21,22},{23}}
 weapons.Slots = {
  {attribute="RiftPrimary",category=1,default=1,label="Primary"},
  {attribute="RiftSecondary",category=2,default=2,label="Secondary"},
- {attribute="RiftPrimaryExtra",category=1,default=7,label="Extra primary"},
- {attribute="RiftSecondaryExtra",category=2,default=8,label="Extra secondary"},
+ {attribute="RiftMelee",category=3,default=21,label="Melee"},
+ {attribute="RiftUtility",category=4,default=23,label="Utility"},
 }
 function weapons.GetId(player,slot)
  local definition=weapons.Slots[slot]
@@ -110819,14 +110850,47 @@ local descriptions={
 }
 for id,weapon in ipairs(weapons) do
  weapon.family=weapon.family or families[id]
- weapon.class=classes[weapon.family]
- weapon.description=descriptions[id]
+ weapon.class=classes[weapon.family] or weapon.family
+ weapon.description=descriptions[id] or (weapon.melee and "Close-range attacks. Melee attacks use no ammunition." or "Throw a grenade. Detonates after 2.5 seconds; cover blocks the blast.")
  weapon.model=(weapon.family=="pistol" or weapon.family=="revolver") and "pistol" or "rifle"
  weapon.finish=id%3
  if weapon.family=="rifle" or weapon.family=="marksman" or weapon.family=="lmg" then weapon.shotSound="rbxassetid://9114727430"
  elseif weapon.family=="smg" then weapon.shotSound="rbxassetid://9114729252"
  elseif weapon.family=="sniper" then weapon.shotSound="rbxassetid://9114727561"; weapon.soundPitch=.68 end
 end
+
+-- Rift interpretations of the RIVALS wiki catalogue; balance values are Rift-specific.
+local additions={
+ {"Knife",3,"Backstab from behind for extra damage.",35,.55,7},
+ {"Katana",3,"Slash enemies; alternate use briefly deflects frontal damage.",30,.6,8},
+ {"Scythe",3,"Wide close-range swing; alternate use lunges forward.",32,.7,10},
+ {"Battle Axe",3,"Heavy swing with knockback; alternate use leaps forward.",45,.95,9},
+ {"Riot Shield",3,"Shove nearby enemies; alternate use blocks frontal attacks.",15,.7,7},
+ {"Trowel",3,"Strike enemies; alternate use builds temporary cover.",25,.6,7},
+ {"Spear",3,"Long reach; alternate use throws a piercing spear.",30,.65,12},
+ {"Maul",3,"Heavy knockback; alternate use performs a ground slam.",50,1.1,8},
+ {"Glass Shard",3,"A fast close-range blade inspired by the special-mode item.",25,.35,6},
+ {"Flashbang",4,"Throw a delayed flash that affects enemies with line of sight.",0,1,60},
+ {"Smoke Grenade",4,"Throw smoke to obscure a route.",0,1,60},
+ {"Molotov",4,"Throw a bottle that creates a damaging fire zone.",8,1,60},
+ {"Medkit",4,"Restore health, capped at your maximum.",0,1,1},
+ {"Satchel",4,"Place an explosive, then activate it with alternate use.",55,1,45},
+ {"Subspace Tripmine",4,"Place a trap that detonates when an enemy approaches.",50,1,45},
+ {"Freeze Ray",4,"Slow an enemy with a short freezing beam.",5,.25,65},
+ {"Jump Pad",4,"Deploy a temporary launch pad.",0,1,10},
+ {"War Horn",4,"Temporarily empower nearby teammates.",0,1,25},
+ {"Warpstone",4,"Teleport toward an aimed safe surface.",0,1,55},
+ {"Grappler",4,"Pull yourself toward a visible anchor point.",0,1,80},
+ {"Warper",4,"Place a paired set of portals using alternate use.",0,1,60},
+ {"Elixir",4,"Restore health and grant a short movement boost.",0,1,1},
+ {"RNG Dice",4,"Roll a random healing, movement or explosive effect.",25,1,45},
+}
+for _,entry in additions do
+ local id=#weapons+1; local melee=entry[2]==3
+ weapons[id]={name=entry[1],short=entry[1],family=melee and "melee" or "utility",class=melee and "Melee" or "Utility",description=entry[3],magazine=melee and 1 or (entry[1]=="Freeze Ray" and 20 or 1),shotInterval=entry[5],reloadTime=melee and 1 or 12,automatic=entry[1]=="Freeze Ray",range=entry[6],bodyDamage=entry[4],headMultiplier=1,hip=0,ads=0,zoom=1,recoil=.12,pitchKick=0,shotSound="rbxasset://sounds/action_jump.mp3",soundPitch=1.1,melee=melee,finish=id%3,blastRadius=13,item=true}
+ table.insert(weapons.Loadouts[entry[2]],id)
+end
+for _,id in {21,22,23} do weapons[id].item=true end
 
 weapons.ReloadSound = "rbxassetid://117963160131194"
 return weapons
@@ -110975,7 +111039,131 @@ task.spawn(function()
 end)
 return Audio
 </ProtectedString></Properties></Item>
-</Item>
+<Item class="ModuleScript" referent="RIFT_ITEMS_MODULE"><Properties><string name="Name">RiftItems</string><ProtectedString name="Source">local Items={}
+local Debris=game:GetService("Debris")
+local Players=game:GetService("Players")
+function Items.Use(x,alt)
+ local w,p,s=x.weapon,x.player,x.state
+ local root=x.character:FindFirstChild("HumanoidRootPart")
+ if not root then return end
+ local function targets(position,radius,callback)
+  local seen={}
+  for _,part in workspace:GetPartBoundsInRadius(position,radius) do
+   local model=part:FindFirstAncestorOfClass("Model")
+   if model and not seen[model] and model~=x.character then
+    seen[model]=true
+    local hum=model:FindFirstChildOfClass("Humanoid"); local r=model:FindFirstChild("HumanoidRootPart")
+    local other=Players:GetPlayerFromCharacter(model)
+    if hum and r and hum.Health&gt;0 and ((other and x.enemy(p,other)) or (not p:GetAttribute("RiftDuelId") and model.Parent==workspace.RiftArena.Targets)) then
+     local delta=r.Position-position; local hit=workspace:Raycast(position,delta,x.params)
+     if not hit or hit.Instance:IsDescendantOf(model) then callback(model,hum,r,other) end
+    end
+   end
+  end
+ end
+ local function boost(direction,power)
+  root.AssemblyLinearVelocity=direction*power+Vector3.new(0,28,0)
+ end
+ local function block(position,size,color,life)
+  local part=x.effect(x.parent,position,size,color,0,life,false); part.Name=w.name; return part
+ end
+ local function area(position,amount,radius)
+  x.blast(p,x.parent,position,{bodyDamage=amount,blastRadius=radius})
+ end
+ local function impact(position)
+  if not x.valid() then return end
+  if w.name=="Smoke Grenade" then
+   local cloud=x.effect(x.parent,position,Vector3.one*22,Color3.fromRGB(75,83,91),.15,9,true)
+   x.remote:FireAllClients("smoke",cloud)
+  elseif w.name=="Flashbang" then
+   x.effect(x.parent,position,Vector3.one*4,Color3.new(1,1,1),.15,.3,true)
+   for _,other in Players:GetPlayers() do
+    local head=other.Character and other.Character:FindFirstChild("Head")
+    if head and x.enemy(p,other) and (head.Position-position).Magnitude&lt;55 then
+     local ray=workspace:Raycast(position,head.Position-position,x.params)
+     if not ray or ray.Instance:IsDescendantOf(other.Character) then x.remote:FireClient(other,"flash",position) end
+    end
+   end
+  elseif w.name=="Molotov" then
+   local fire=block(position,Vector3.new(16,.3,16),Color3.fromRGB(235,115,42),6)
+   task.spawn(function() for _=1,12 do if not x.valid() or not fire.Parent then break end; targets(position,9,function(model) x.damage(p,model,8,false,position) end); task.wait(.5) end end)
+  else area(position,w.bodyDamage,w.blastRadius or 13) end
+ end
+ local hit=workspace:Raycast(x.origin,x.aim*(w.range or 60),x.params)
+ local point=hit and hit.Position+hit.Normal*.8 or x.origin+x.aim*(w.range or 60)
+ if alt then
+  if w.name=="Fists" then
+   if x.humanoid.FloorMaterial==Enum.Material.Air and not s.airJumpUsed then s.airJumpUsed=true; root.AssemblyLinearVelocity=Vector3.new(root.AssemblyLinearVelocity.X,48,root.AssemblyLinearVelocity.Z) end
+  elseif w.name=="Katana" or w.name=="Riot Shield" then p:SetAttribute("RiftGuardUntil",os.clock()+1.2); p:SetAttribute("RiftGuardReflect",w.name=="Katana")
+  elseif w.name=="Trowel" then local wall=block(root.Position+root.CFrame.LookVector*6,Vector3.new(9,7,1),Color3.fromRGB(125,113,94),8); wall.CanCollide=true; wall.CanQuery=true
+  elseif w.name=="Spear" then local thrown=workspace:Raycast(x.origin,x.aim*90,x.params); if thrown then x.damage(p,thrown.Instance:FindFirstAncestorOfClass("Model"),45,false,x.origin) end
+  elseif w.name=="Maul" then x.effect(x.parent,root.Position,Vector3.new(20,.3,20),Color3.fromRGB(145,128,100),.5,.3,false); targets(root.Position,12,function(model) x.damage(p,model,35,false,root.Position) end)
+  elseif w.name=="Satchel" then if s.satchel and s.satchel.Parent then local pos=s.satchel.Position; s.satchel:Destroy(); s.satchel=nil; area(pos,55,14) end
+  elseif w.name=="Warper" then
+   if s.portal and s.portal.Parent then
+    local first=s.portal; s.portal=nil
+    local second=block(point,Vector3.new(5,.3,5),Color3.fromRGB(90,160,170),12)
+    local last={}
+    for _,pair in {{first,second},{second,first}} do pair[1].CanTouch=true; pair[1].Touched:Connect(function(part)
+     local character=part:FindFirstAncestorOfClass("Model"); local other=character and Players:GetPlayerFromCharacter(character)
+     if x.valid() and other and x.ally(p,other) and pair[2].Parent and os.clock()-(last[other] or 0)&gt;1 then last[other]=os.clock(); character:PivotTo(CFrame.new(pair[2].Position+Vector3.new(0,4,0))) end
+    end) end
+   end
+  else boost(x.aim,w.name=="Chainsaw" and 58 or 44) end
+  return
+ end
+ if w.melee then
+  targets(x.origin,w.range,function(model,hum,r)
+   local delta=r.Position-x.origin
+   if delta.Magnitude&lt;.01 or x.aim:Dot(delta.Unit)&gt;.35 then
+    local amount=w.bodyDamage
+    if w.name=="Knife" and r.CFrame.LookVector:Dot((root.Position-r.Position).Unit)&lt;-.5 then amount*=2 end
+    x.damage(p,model,amount,false,x.origin)
+    if w.name=="Maul" or w.name=="Battle Axe" or w.name=="Riot Shield" then r.AssemblyLinearVelocity+=x.aim*35+Vector3.new(0,12,0) end
+   end
+  end)
+ elseif w.name=="Medkit" or w.name=="Elixir" then
+  x.humanoid.Health=math.min(x.humanoid.MaxHealth,x.humanoid.Health+(w.name=="Medkit" and 70 or 35))
+  if w.name=="Elixir" then boost(x.aim,35) end
+ elseif w.name=="Warpstone" then
+  if hit then
+   local destination=point+Vector3.new(0,3,0)
+   local clear=OverlapParams.new(); clear.FilterType=Enum.RaycastFilterType.Exclude; clear.FilterDescendantsInstances={x.character}
+   local safe=true; for _,part in workspace:GetPartBoundsInBox(CFrame.new(destination),Vector3.new(3,5,3),clear) do if part.CanCollide then safe=false; break end end
+   if safe then x.character:PivotTo(CFrame.lookAt(destination,destination+x.aim)) end
+  end
+ elseif w.name=="Grappler" then if hit then boost((point-root.Position).Unit,65) end
+ elseif w.name=="War Horn" then
+  for _,other in Players:GetPlayers() do
+   local r=other.Character and other.Character:FindFirstChild("HumanoidRootPart")
+   if r and x.ally(p,other) and (r.Position-root.Position).Magnitude&lt;30 then other:SetAttribute("RiftEmpoweredUntil",os.clock()+6) end
+  end
+ elseif w.name=="Freeze Ray" then
+  local length=(point-x.origin).Magnitude; if length&gt;.1 then local beam=block((point+x.origin)*.5,Vector3.new(.12,.12,length),Color3.fromRGB(120,210,230),.15);beam.CFrame=CFrame.lookAt((point+x.origin)*.5,point) end
+  if hit then
+   local model=hit.Instance:FindFirstAncestorOfClass("Model"); x.damage(p,model,5,false,x.origin)
+   targets(point,2,function(_,hum,r) r.AssemblyLinearVelocity*=.25; hum:SetAttribute("RiftFrozenUntil",os.clock()+1.5) end)
+  end
+ elseif w.name=="Jump Pad" then
+  local pad=block(root.Position+root.CFrame.LookVector*5-Vector3.new(0,2.5,0),Vector3.new(6,.4,6),Color3.fromRGB(73,151,159),15)
+  pad.CanCollide=true; pad.CanTouch=true; local last={}
+  pad.Touched:Connect(function(part) local model=part:FindFirstAncestorOfClass("Model"); local other=model and Players:GetPlayerFromCharacter(model); local r=model and model:FindFirstChild("HumanoidRootPart")
+   if x.valid() and other and r and x.ally(p,other) and os.clock()-(last[other] or 0)&gt;.8 then last[other]=os.clock(); r.AssemblyLinearVelocity=Vector3.new(r.AssemblyLinearVelocity.X,75,r.AssemblyLinearVelocity.Z) end
+  end)
+ elseif w.name=="Satchel" or w.name=="Subspace Tripmine" or w.name=="Warper" then
+  local device=block(point,Vector3.new(2,.4,2),Color3.fromRGB(120,146,136),20)
+  if w.name=="Satchel" then s.satchel=device
+  elseif w.name=="Warper" then s.portal=device
+  else task.spawn(function() task.wait(.8); while device.Parent and x.valid() do local found=false; targets(device.Position,7,function() found=true end); if found then local pos=device.Position; device:Destroy(); area(pos,50,13); break end; task.wait(.2) end end) end
+ elseif w.name=="RNG Dice" then
+  local roll=math.random(1,3); if roll==1 then x.humanoid.Health=math.min(100,x.humanoid.Health+25) elseif roll==2 then boost(x.aim,45) else impact(point) end
+ else
+  local ball=block(x.origin+x.aim*2,Vector3.one*.6,Color3.fromRGB(86,116,82),4); ball.Shape=Enum.PartType.Ball; ball.Anchored=false; ball.CanCollide=true; ball.CanQuery=false; ball:SetNetworkOwner(nil); ball.AssemblyLinearVelocity=x.aim*60+Vector3.new(0,20,0)
+  task.delay(w.name=="Molotov" and 1 or 2.5,function() if ball.Parent then local pos=ball.Position; ball:Destroy(); impact(pos) end end)
+ end
+end
+return Items
+</ProtectedString></Properties></Item></Item>
 	<Item class="ServerScriptService" referent="RBX25e400ec60334f34bcfd868bbdaea316">
 		<Properties>
 			<bool name="LoadStringEnabled">false</bool>
@@ -111158,6 +111346,7 @@ run.Heartbeat:Connect(function(dt)
    state.stamina=math.min(100,state.stamina+step*18)
   end
   local speed=sliding and 28 or (sprint and 25 or 17)
+  if (humanoid:GetAttribute("RiftFrozenUntil") or 0)&gt;os.clock() then speed=math.min(speed,6) end
   if humanoid.WalkSpeed~=speed then humanoid.WalkSpeed=speed end
   player:SetAttribute("RiftStamina",math.floor(state.stamina))
   player:SetAttribute("RiftSprinting",sprint and moving)
@@ -111194,6 +111383,7 @@ end)
 local R=game.ReplicatedStorage.RiftAction
 local D=game:GetService("Debris")
 local weapons=require(game.ReplicatedStorage.RiftWeapons)
+local Items=require(game.ReplicatedStorage.RiftItems)
 local eliminated=script.Parent.RiftElimination
 local rng=Random.new()
 local S={}
@@ -111218,10 +111408,12 @@ local function setup(p)
  p.CameraMode=Enum.CameraMode.LockFirstPerson
  local function onCharacter(character)
   reset(p)
+  p:SetAttribute("RiftGuardUntil",0); p:SetAttribute("RiftEmpoweredUntil",0)
   local humanoid=character:WaitForChild("Humanoid",5)
   if humanoid then
    humanoid.MaxHealth=100
    humanoid.Health=100
+   humanoid.StateChanged:Connect(function(_,state) if state==Enum.HumanoidStateType.Landed and S[p] then S[p].airJumpUsed=false end end)
   end
  end
  p.CharacterAdded:Connect(onCharacter)
@@ -111261,6 +111453,18 @@ local function damage(attacker,model,amount,headshot,origin)
  end
  local target=model:FindFirstChildOfClass("Humanoid")
  if not target or target.Health&lt;=0 then return end
+ if attacker:GetAttribute("RiftEmpoweredUntil") and attacker:GetAttribute("RiftEmpoweredUntil")&gt;os.clock() then amount*=1.2 end
+ if opponent and origin then
+  local root=model:FindFirstChild("HumanoidRootPart")
+  local direction=root and origin-root.Position
+  local facing=direction and direction.Magnitude&gt;.01 and root.CFrame.LookVector:Dot(direction.Unit) or 0
+  if (opponent:GetAttribute("RiftGuardUntil") or 0)&gt;os.clock() and facing&gt;.2 then
+   if opponent:GetAttribute("RiftGuardReflect") then local h=attacker.Character and attacker.Character:FindFirstChildOfClass("Humanoid"); if h then h:TakeDamage(math.min(amount,35)) end end
+   return
+  end
+  local state=S[opponent]
+  if state and state.equipped~=3 and weapons[state.loadout[3]].name=="Riot Shield" and facing&lt;-.2 then amount*=.5 end
+ end
  local before=target.Health
  target:TakeDamage(math.round(amount))
  local dealt=math.round(before-target.Health)
@@ -111359,6 +111563,7 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
  local weaponId=s.loadout[slot]
  local weapon=weapons[weaponId]
  if action=="reload" then
+  if weapon.melee then return end
   if (expectedSlot and expectedSlot~=slot) or s.reload or s.ammo[slot]==weapon.magazine then return end
   local reload={}
   s.reload=reload
@@ -111371,16 +111576,25 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
   end)
   return
  end
- if typeof(action)~="string" or (action~="fire" and not cooldown[action]) then return end
+ if typeof(action)~="string" or (action~="fire" and action~="itemAlt" and not cooldown[action]) then return end
  if duel and action==weapons.Kits[p:GetAttribute("RiftKit") or 1].omitted then return end
  if typeof(aim)~="Vector3" or not (aim.Magnitude&gt;.99 and aim.Magnitude&lt;1.01) then return end
  local origin=head.Position
  local params=RaycastParams.new()
  params.FilterType=Enum.RaycastFilterType.Exclude; params.FilterDescendantsInstances={c}
+ local function useItem(alt)
+  Items.Use({weapon=weapon,player=p,state=s,character=c,humanoid=h,origin=origin,aim=aim,params=params,parent=effectParent,remote=R,damage=damage,blast=blast,effect=effect,enemy=enemy,ally=function(a,b) return sameCombatSpace(a,b) and (not a:GetAttribute("RiftDuelId") or a:GetAttribute("RiftTeam")==b:GetAttribute("RiftTeam")) end,valid=function() return p.Parent==P and S[p]==s and h.Health&gt;0 and effectParent.Parent~=nil and (not duel or (p:GetAttribute("RiftDuelPhase")=="Fight" and p:GetAttribute("RiftRoundAlive"))) end},alt)
+ end
+ if action=="itemAlt" then
+  if not weapon.item or (expectedSlot and expectedSlot~=slot) or now&lt;(s.itemAltReady or 0) then return end
+  if not weapon.melee and weapon.name~="Satchel" and weapon.name~="Warper" then return end
+  if weapon.name=="Fists" and h.FloorMaterial~=Enum.Material.Air then return end
+  s.itemAltReady=now+3; useItem(true); return
+ end
  if action=="fire" then
   if (expectedSlot and expectedSlot~=slot) or s.reload or s.ammo[slot]&lt;=0 or now&lt;s.nextShot then return end
   s.nextShot=now+weapon.shotInterval
-  s.ammo[slot]-=1
+  if not weapon.melee then s.ammo[slot]-=1 end
   R:FireClient(p,"weaponState",slot,s.ammo[slot],false)
   for _,other in P:GetPlayers() do
    if other~=p and sameCombatSpace(p,other) then
@@ -111392,6 +111606,13 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
   end
   local spread=aiming==true and weapon.ads or weapon.hip
   if p:GetAttribute("RiftSprinting") or p:GetAttribute("RiftSliding") then spread=math.max(weapon.hip,spread)*1.45 end
+  if weapon.item then useItem(false); return end
+  if weapon.grenade then
+   local ball=Instance.new("Part"); ball.Name="RiftGrenade"; ball.Shape=Enum.PartType.Ball; ball.Size=Vector3.one*.65; ball.Color=Color3.fromRGB(65,90,62); ball.CFrame=CFrame.new(origin+aim*2); ball.CanCollide=true; ball.Parent=effectParent
+   ball:SetNetworkOwner(nil); ball.AssemblyLinearVelocity=aim*65+Vector3.new(0,20,0); D:AddItem(ball,3)
+   task.delay(2.5,function() if ball.Parent then local position=ball.Position; ball:Destroy(); if p.Parent and S[p]==s then blast(p,effectParent,position,weapon) end end end)
+   return
+  end
   local hits={}
   local pellets=weapon.pellets or 1
   local pelletDamage=weapon.bodyDamage/pellets

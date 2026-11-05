@@ -15,7 +15,7 @@ The interface uses pale stone panels, slate text and muted teal primary actions 
 
 A single Studio client was used. Desktop, iPhone 17 Pro landscape and portrait, and iPad Pro M5 landscape layouts were inspected. The theme token count, modal priority, search empty state, all 20 weapon rows, and 44px menu button dimensions passed runtime checks. The training HUD was inspected on the tablet simulator. Studio was returned to its default viewport afterwards. Existing weapon sound asset warnings remain; no new UI runtime error was observed during these checks. Multiplayer matches and full touch combat were not tested.
 
-`Rift.rbxlx` is the editable place and source of truth. The expanded maps, weapon balance, four-slot loadout and audio update were published to Roblox as version 28 on 5 November 2026.
+`Rift.rbxlx` is the editable place and source of truth. This update is saved to GitHub and applied to the open Studio edit session; it is not a Roblox live publication.
 
 ## Larger maps and weapon balance
 
@@ -52,3 +52,15 @@ Players carry two primaries and two secondaries. Slots 1/2 retain the existing r
 The lobby loops APM Music's **Spirit Warmth** (9042295159), a quiet instrumental ambient/electronic track from the Roblox Creator Store. It fades in/out over 0.7 seconds, pauses outside the lobby and during matches, and resumes on return. Settings has an independent music-volume slider, including mute; effects volume remains separate. These catalogue assets are referenced by ID, not redistributed as audio files.
 
 Studio verification confirmed all 20 gun templates, eight extra cue templates, and the 132-second music track loaded. Four real fire requests consumed ammo independently in slots 1–4. Switching preserved ammo, reloads restored slots 1 and 4, invalid slot/category loadout requests were rejected, and music mute/fade/resume left effects volume unchanged. The four-slot HUD was visually inspected on desktop. Multiplayer audio mixing and full mobile combat still need player testing.
+
+## Melee and utility catalogue
+
+The current loadout is one Primary, one Secondary, one Melee and one Utility. Defaults are Vanguard Rifle, Scout Pistol, Fists and Grenade. Keys 1–4 and the HUD select these categories; the Arsenal only offers a weapon's matching destination slot. Melee uses no ammunition. Utilities have charges and can be replenished through their reload cooldown.
+
+The catalogue has 46 entries: the existing 20 guns, 11 melee choices and 15 utility choices. Melee: Fists, Chainsaw, Knife, Katana, Scythe, Battle Axe, Riot Shield, Trowel, Spear, Maul and Glass Shard. Utilities: Grenade, Flashbang, Smoke Grenade, Molotov, Medkit, Satchel, Subspace Tripmine, Freeze Ray, Jump Pad, War Horn, Warpstone, Grappler, Warper, Elixir and RNG Dice.
+
+These are original Rift implementations guided by the RIVALS wiki catalogue and role descriptions, with Rift-specific balance and simplified native-part models. Special-mode items are included as ordinary selectable Rift items. This is not a claim of exact RIVALS damage, timings, animation or network behavior. Reference: https://robloxrivals.fandom.com/wiki/Weapons and https://robloxrivals.fandom.com/wiki/Category:Utility_Weapons (consulted 5 November 2026).
+
+Melee sweeps use range, facing and line-of-sight checks, with server-side damage and friendly-fire rules. Knife backstabs deal double damage. Right mouse activates item alternate actions: Fists can double jump (also Space while airborne), Chainsaw/Scythe/Axe rush or leap, Katana deflects, Shield guards, Trowel creates temporary cover, Spear throws and Maul slams. Satchel alternate use detonates its charge; Warper alternate use places its second portal. Other utilities use their primary action. Freeze slows through the movement controller, War Horn briefly amplifies allied damage, Medkit heals, and thrown smoke/flash/fire/grenades use delayed effects. Temporary objects have bounded lifetimes and round-state guards. Existing Q/E/F tactical abilities remain available.
+
+Verification: every catalogue entry produced a nonempty preview model. All 26 melee/utility handlers and alternate-action branches ran in a Studio dispatch review, including delayed explosions. Real client fire requests dealt 20 with Fists, 8 per Chainsaw tick and 70 on a Knife backstab. This is solo testing; multiplayer deflection, portals, traps, team buffs and balance need broader playtesting.
