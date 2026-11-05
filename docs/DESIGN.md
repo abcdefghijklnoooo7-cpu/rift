@@ -15,7 +15,7 @@ The interface uses pale stone panels, slate text and muted teal primary actions 
 
 A single Studio client was used. Desktop, iPhone 17 Pro landscape and portrait, and iPad Pro M5 landscape layouts were inspected. The theme token count, modal priority, search empty state, all 20 weapon rows, and 44px menu button dimensions passed runtime checks. The training HUD was inspected on the tablet simulator. Studio was returned to its default viewport afterwards. Existing weapon sound asset warnings remain; no new UI runtime error was observed during these checks. Multiplayer matches and full touch combat were not tested.
 
-`Rift.rbxlx` is the editable place and source of truth. This update is saved to GitHub and applied to the open Studio edit session; it is not a Roblox live publication.
+`Rift.rbxlx` is the editable place and source of truth. The expanded maps, weapon balance, four-slot loadout and audio update were published to Roblox as version 28 on 5 November 2026.
 
 ## Larger maps and weapon balance
 
