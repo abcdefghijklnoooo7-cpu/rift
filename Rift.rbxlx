@@ -110630,6 +110630,7 @@ end)
 local Models={}
 function Models.create(w)
  local model=Instance.new("Model"); model.Name=w.name
+ if w.name=="Fists" then model:SetAttribute("FistsModel",true) end
  local steel=Color3.fromRGB(150,158,164)
  local dark=Color3.fromRGB(27,32,36)
  local rubber=Color3.fromRGB(42,47,49)
@@ -110702,12 +110703,16 @@ function Models.create(w)
   if name=="Fists" then
    for _,side in {-1,1} do
     local x=side*.43
-    box("Wrist wrap",.38,.34,.4,x,-.25,.05,paint,Enum.Material.Fabric)
-    local fist=ball("Padded glove",.46,.47,.57,x,.04,-.17,rubber,Enum.Material.SmoothPlastic);fist:SetAttribute("ArmSide",side==1 and "Right" or "Left")
-    for i=1,4 do local knuckle=ball("Knuckle",.105,.19,.22,x-.165+i*.07,.13,-.39,paint);knuckle:SetAttribute("ArmSide",side==1 and "Right" or "Left") end
-    local thumb=ball("Thumb",.15,.28,.27,x-side*.22,-.02,-.12,rubber);thumb:SetAttribute("ArmSide",side==1 and "Right" or "Left")
-    for i=1,3 do box("Wrap seam",.39,.018,.41,x,-.4+i*.065,.05,dark,Enum.Material.Fabric) end
-    box("Wrist badge",.21,.13,.02,x,-.25,-.16,trim)
+    local armSide=side==1 and "Right" or "Left"
+    local cuff=box("Fingerless glove cuff",.39,.43,.42,x,-.34,.04,dark,Enum.Material.SmoothPlastic);cuff:SetAttribute("ArmSide",armSide)
+    for i=1,3 do box("Cuff rib",.402,.025,.432,x,-.49+i*.075,.04,rubber,Enum.Material.Fabric) end
+    -- Exposed skin panel across the knuckles, recolored from this player's matching arm.
+    local skin=box("Exposed knuckles",.43,.19,.19,x,.11,-.39,Color3.fromRGB(205,165,130),Enum.Material.SmoothPlastic,CFrame.Angles(0,0,side*.12));skin:SetAttribute("ArmSide",armSide)
+    local glove=box("Fingerless glove back",.48,.34,.48,x,-.06,-.16,dark,Enum.Material.SmoothPlastic,CFrame.Angles(0,0,side*.08));glove:SetAttribute("ArmSide",armSide)
+    -- Keep the skin panel visible as a broad band at the front edge of the glove.
+    local skinBand=box("Exposed finger band",.445,.12,.055,x,.095,-.423,Color3.fromRGB(205,165,130),Enum.Material.SmoothPlastic);skinBand:SetAttribute("ArmSide",armSide)
+    local thumb=ball("Glove thumb",.17,.25,.28,x-side*.23,-.03,-.12,dark,Enum.Material.SmoothPlastic);thumb:SetAttribute("ArmSide",armSide)
+    local thumbSkin=ball("Exposed thumb knuckle",.17,.12,.12,x-side*.25,.08,-.28,Color3.fromRGB(205,165,130),Enum.Material.SmoothPlastic);thumbSkin:SetAttribute("ArmSide",armSide)
    end
   elseif name=="Chainsaw" then
    box("Engine housing",.56,.48,.73,0,0,.03,paint,Enum.Material.SmoothPlastic)
@@ -110883,7 +110888,7 @@ function Models.create(w)
  return model
 end
 function Models.recolorFists(model,player)
- if not model or model.Name~="Fists" or not player then return end
+ if not model or (model.Name~="Fists" and not model:GetAttribute("FistsModel")) or not player then return end
  local character=player.Character; if not character then return end
  local colors=character:FindFirstChildOfClass("BodyColors")
  for _,part in model:GetChildren() do
