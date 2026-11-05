@@ -1,0 +1,7 @@
+# Section 7: gameplay balance review
+
+The competitive maps use several routes, elevation, cover and boundary containment. Their geometry and target positions were revised alongside the shooting system. Training uses the same server-side ballistics and weapon definitions as matches. Aim and movement influence shot error; damage falls with distance and head multipliers are weapon specific.
+
+The current weapon catalogue intentionally distinguishes close-range automatic weapons and shotguns from accurate long-range marksman weapons. For example, at full damage against 100 health, the Vanguard Rifle requires 20 body hits (roughly 2.0 seconds between first and last shot); the Talon requires 15 (1.82 seconds); the Vector DMR requires five (1.2 seconds); and the Sentinel requires four (2.04 seconds). Headshots, falloff, armor, missed shots and reloads alter those figures. A perfect hit sequence is not an observation of actual time to kill. Large differences make actual encounter results dependent on accuracy, movement, range and cover.
+
+The present damage values were retained because changing them without player feedback could upset the existing game economy and loadouts. Map engagement distances, sightlines, flanking routes, spawn fairness, recoil difficulty and time to kill still need a multiplayer playtest before a competitive balance claim is justified. No new tests were run at the user's request.
