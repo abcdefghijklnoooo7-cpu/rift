@@ -109106,9 +109106,8 @@ local assets=game:GetService("ContentProvider")
 local weapons=require(game.ReplicatedStorage:WaitForChild("RiftWeapons"))
 local UI=require(game.ReplicatedStorage:WaitForChild("RiftUI"))
 local C=UI.C
-local soundGroup=Instance.new("SoundGroup"); soundGroup.Name="RiftEffects"; soundGroup.Parent=audio
-local function volume() soundGroup.Volume=P:GetAttribute("RiftVolume") or 1 end
-P:GetAttributeChangedSignal("RiftVolume"):Connect(volume); volume()
+local Audio=require(game.ReplicatedStorage:WaitForChild("RiftAudio"))
+local soundGroup=Audio.Effects
 game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Health,false)
 local gui=Instance.new("ScreenGui"); gui.Name="RiftHUD"; gui.ResetOnSpawn=false; gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets; gui.Parent=P:WaitForChild("PlayerGui")
 local function label(size,pos,anchor,caption,fontSize)
@@ -109124,7 +109123,7 @@ local cross={bar(2,7,0,-8),bar(2,7,0,8),bar(7,2,-8,0),bar(7,2,8,0)}
 for _,f in cross do local s=Instance.new("UIScale"); s.Parent=f end
 local footer=Instance.new("Frame")
 footer.Name="CombatFooter"
-footer.Size=UDim2.fromOffset(780,90)
+footer.Size=UDim2.fromOffset(780,138)
 footer.AnchorPoint=Vector2.new(.5,1)
 footer.Position=UDim2.new(.5,0,1,-22)
 footer.BackgroundTransparency=1
@@ -109182,10 +109181,10 @@ staminaText.TextStrokeTransparency=1
 local ammo=footerLabel("Ammo","",574,2,206,37,20)
 rounded(ammo,7)
 local weaponSlots={}
-for slot=1,2 do
- local name=weapons[slot].name:match("%S+ (%S+)")
- weaponSlots[slot]=footerLabel("Weapon"..slot,slot.."  "..name,574+(slot-1)*104,44,102,46,14)
- rounded(weaponSlots[slot],7)
+local switchSlot=function() end
+for slot=1,#weapons.Slots do
+ local chip=UI.button(footer,tostring(slot),574+((slot-1)%2)*104,44+math.floor((slot-1)/2)*48,102,44,function() switchSlot(slot) end)
+ chip.Name="Weapon"..slot; chip.TextSize=13; weaponSlots[slot]=chip
 end
 local keys={Q="smoke",E="flash",F="recon"}
 local slots={}
@@ -109259,7 +109258,7 @@ local function playShot(slot,source)
  if not template.IsLoaded and slot==2 then shot.PlaybackSpeed=3 end
  shot.Parent=source or audio
  shot:Play()
- D:AddItem(shot,.65)
+ D:AddItem(shot,shot.TimeLength&gt;0 and shot.TimeLength/shot.PlaybackSpeed+.1 or 3)
 end
 local function stopReloadSound()
  reloadSound:Stop()
@@ -109272,7 +109271,7 @@ local held=false
 local nextShot=0
 local kick=0
 local function weaponId(slot)
- return P:GetAttribute(slot==1 and "RiftPrimary" or "RiftSecondary") or slot
+ return weapons.GetId(P,slot)
 end
 local rounds=weapons[weaponId(1)].magazine
 local reloading=false
@@ -109293,6 +109292,10 @@ local function canFight()
  end
  local map=P:GetAttribute("RiftMap")
  return map~=nil and map~="Lobby"
+end
+switchSlot=function(slot)
+ if P:GetAttribute("RiftMenuOpen") or not canFight() then return end
+ held=false; R:FireServer("equip",slot)
 end
 local function kitAllows(action)
  return not P:GetAttribute("RiftDuelId") or weapons.Kits[P:GetAttribute("RiftKit") or 1].omitted~=action
@@ -109331,10 +109334,8 @@ U.InputBegan:Connect(function(input,processed)
   held=weapons[weaponId(equipped)].automatic
   if rounds==0 and not reloading then emptySound:Play() else fire(os.clock()) end
  end
- if input.KeyCode==Enum.KeyCode.One or input.KeyCode==Enum.KeyCode.Two then
-  held=false
-  R:FireServer("equip",input.KeyCode==Enum.KeyCode.One and 1 or 2)
- end
+ local numberSlots={[Enum.KeyCode.One]=1,[Enum.KeyCode.Two]=2,[Enum.KeyCode.Three]=3,[Enum.KeyCode.Four]=4}
+ local slot=numberSlots[input.KeyCode]; if slot then switchSlot(slot) end
  if input.KeyCode==Enum.KeyCode.R then request("reload") end
  if input.KeyCode==Enum.KeyCode.LeftShift then R:FireServer("sprint",true) end
  if input.KeyCode==Enum.KeyCode.C then R:FireServer("dash") end
@@ -109357,11 +109358,20 @@ P:GetAttributeChangedSignal("RiftMenuOpen"):Connect(function()
 end)
 local revealed={}
 P.CharacterAdded:Connect(resetLoadout)
+local function landing(character)
+ local hum=character:WaitForChild("Humanoid",5)
+ if hum then hum.StateChanged:Connect(function(old,new)
+  if old==Enum.HumanoidStateType.Freefall and new==Enum.HumanoidStateType.Landed then Audio.Play("land") end
+ end) end
+end
+P.CharacterAdded:Connect(landing)
+if P.Character then task.spawn(landing,P.Character) end
 R.OnClientEvent:Connect(function(event,a,b,c)
  if event=="combatReset" then
   resetLoadout()
  elseif event=="weaponState" then
   if equipped~=a then
+   Audio.Play("equip")
    nextShot=os.clock()+.2
    held=false
    kick=0
@@ -109371,6 +109381,7 @@ R.OnClientEvent:Connect(function(event,a,b,c)
    local reload=reloadSound.IsLoaded and reloadSound or reloadFallback
    reload:Play()
   elseif not c and reloading then
+   if b&gt;rounds then Audio.Play("reloadEnd") end
    stopReloadSound()
   end
   equipped=a
@@ -109392,11 +109403,12 @@ R.OnClientEvent:Connect(function(event,a,b,c)
    explosionSound:Play()
   end
  elseif event=="damageFrom" then
+  Audio.Play("hurt")
   damageAt=os.clock()+.65
   damagePosition=a
  elseif event=="abilityCast" then
-  local cue=a=="bounce" and bounceSound or abilitySound
-  cue:Play()
+  if a=="dash" or a=="slide" then Audio.Play(a)
+  else local cue=a=="bounce" and bounceSound or abilitySound; cue:Play() end
  elseif event=="cooldown" then ready[a]=os.clock()+b
  elseif event=="smoke" and a then table.insert(clouds,a)
  elseif event=="flash" then
@@ -109450,21 +109462,21 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
   footerScale.Scale=math.min(1,(cam.ViewportSize.X-32)/(phone and 320 or 780))
   footer.Position=UDim2.new(.5,0,1, U.TouchEnabled and -148 or -22)
   if phone then
-   footer.Size=UDim2.fromOffset(320,132)
+   footer.Size=UDim2.fromOffset(320,152)
    healthTrack.Size=UDim2.fromOffset(130,31); health.Size=UDim2.fromOffset(130,31); staminaTrack.Size=UDim2.fromOffset(130,10); staminaText.Size=UDim2.fromOffset(148,24)
    ammo.Size=UDim2.fromOffset(150,37)
    healthTrack.Position=UDim2.fromOffset(0,4); staminaTrack.Position=UDim2.fromOffset(0,44)
    staminaText.Position=UDim2.fromOffset(0,58)
    ammo.Position=UDim2.fromOffset(170,0)
-   for i,chip in weaponSlots do chip.Position=UDim2.fromOffset(170+(i-1)*76,44); chip.Size=UDim2.fromOffset(74,44); chip.TextTruncate=Enum.TextTruncate.AtEnd; chip.TextSize=13 end
-   for i,key in {"Q","E","F"} do slots[keys[key]].Position=UDim2.fromOffset((i-1)*108,94); slots[keys[key]].Size=UDim2.fromOffset(104,36) end
+   for i,chip in weaponSlots do chip.Position=UDim2.fromOffset((i-1)*80,72); chip.Size=UDim2.fromOffset(76,44); chip.TextTruncate=Enum.TextTruncate.AtEnd; chip.TextSize=13 end
+   for i,key in {"Q","E","F"} do slots[keys[key]].Position=UDim2.fromOffset((i-1)*108,124); slots[keys[key]].Size=UDim2.fromOffset(104,24) end
   else
-   footer.Size=UDim2.fromOffset(780,90)
+   footer.Size=UDim2.fromOffset(780,138)
    healthTrack.Size=UDim2.fromOffset(190,31); health.Size=UDim2.fromOffset(190,31); staminaTrack.Size=UDim2.fromOffset(190,10); staminaText.Size=UDim2.fromOffset(190,18)
    ammo.Size=UDim2.fromOffset(206,37)
    healthTrack.Position=UDim2.fromOffset(0,41); staminaTrack.Position=UDim2.fromOffset(0,79); staminaText.Position=UDim2.fromOffset(0,19)
    ammo.Position=UDim2.fromOffset(574,2)
-   for i,chip in weaponSlots do chip.Position=UDim2.fromOffset(574+(i-1)*104,44); chip.Size=UDim2.fromOffset(102,46); chip.TextSize=16 end
+   for i,chip in weaponSlots do chip.Position=UDim2.fromOffset(574+((i-1)%2)*104,44+math.floor((i-1)/2)*48); chip.Size=UDim2.fromOffset(102,44); chip.TextSize=13 end
    for i,key in {"Q","E","F"} do slots[keys[key]].Position=UDim2.fromOffset(202+(i-1)*120,50); slots[keys[key]].Size=UDim2.fromOffset(112,39) end
   end
  end
@@ -109539,7 +109551,7 @@ Run:BindToRenderStep("RiftHUD",Enum.RenderPriority.Camera.Value+1,function(dt)
  local stride=math.min(horizontal/24,1)*(1-aimBlend)
  local bobX=math.sin(now*(sprinting and 15 or 10))*.035*stride
  local bobY=math.cos(now*(sprinting and 30 or 20))*.032*stride
- local distance=equipped==1 and -1.45 or -1.15
+ local distance=weapons.Slots[equipped].category==1 and -1.45 or -1.15
  local x=.52*(1-aimBlend)+bobX
  local y=-.52+.37*aimBlend-.49*reloadBlend-.55*equipBlend+bobY
  local base=cam.CFrame*CFrame.new(x,y,distance+kick+.1*aimBlend)
@@ -109575,6 +109587,7 @@ local Models=require(storage:WaitForChild("RiftWeaponModels"))
 local UI=require(storage:WaitForChild("RiftUI"))
 local Controller=require(storage:WaitForChild("RiftUIController"))
 local C=UI.C
+local Audio=require(storage:WaitForChild("RiftAudio"))
 local gui=Instance.new("ScreenGui"); gui.Name="RiftSettings"; gui.ResetOnSpawn=false; gui.DisplayOrder=30; gui.ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets; gui.Parent=player:WaitForChild("PlayerGui")
 local shade=Instance.new("CanvasGroup"); shade.Name="MenuScreen"; shade.Size=UDim2.fromScale(1,1); shade.BackgroundColor3=C.background; shade.BackgroundTransparency=.3; shade.Parent=gui
 local panel=UI.frame(shade,"Menu",0,0,0,0); panel.Size=UDim2.fromScale(.92,.9); panel.Position=UDim2.fromScale(.5,.5); panel.AnchorPoint=Vector2.new(.5,.5); UI.surface(panel)
@@ -109687,7 +109700,7 @@ local description=hint(arsenal,"")
 local stats=hint(arsenal,"")
 local previewId,previewModel
 local weaponRows={}
-local equip
+local equipButtons={}
 local function refreshWeapon()
  local w=weapons[selected]
  if previewId~=selected then
@@ -109697,16 +109710,23 @@ local function refreshWeapon()
   camera.CFrame=CFrame.lookAt(centre.Position+Vector3.new(2.7,.5,-.9)*math.max(size.Z/3,.55),centre.Position)
  end
  local slot=table.find(weapons.Loadouts[1],selected) and 1 or 2
- local equipped=(player:GetAttribute(slot==1 and "RiftPrimary" or "RiftSecondary") or slot)==selected
+ local category=slot
  weaponName.Text=w.name
  classLabel.Text=(slot==1 and "Primary" or "Secondary").." · "..(w.class or w.short)
  description.Text=w.description or "Aim carefully and use cover between shots."
  stats.Text=w.directDamage and string.format("%d direct · %d splash · %d rounds · %.1fs reload",w.directDamage,w.bodyDamage,w.magazine,w.reloadTime) or string.format("%s damage · %d rounds · %.1fs reload",tostring(w.bodyDamage),w.magazine,w.reloadTime)
- equip.Text=equipped and "Equipped" or (editable() and "Equip weapon" or "Return to lobby to equip")
- equip.Active=editable() and not equipped; equip.TextTransparency=equip.Active and 0 or .35
+ for destination,b in equipButtons do
+  local definition=weapons.Slots[destination]
+  local equipped=weapons.GetId(player,destination)==selected
+  b.Parent.Visible=definition.category==category
+  b.Text=equipped and ("Slot "..destination.." · Equipped") or (editable() and ("Equip to slot "..destination.." · "..definition.label) or "Return to lobby to equip")
+  b.Active=editable() and not equipped; b.TextTransparency=b.Active and 0 or .35
+ end
  for id,b in weaponRows do UI.select(b,id==selected) end
 end
-equip=button(arsenal,"Equip weapon",function() if editable() then action:FireServer("loadout",selected) end end,true)
+for slot,definition in ipairs(weapons.Slots) do
+ equipButtons[slot]=button(arsenal,"Equip to slot "..slot,function() if editable() then action:FireServer("loadout",selected,slot); Audio.Play("equip") end end,slot&lt;=2)
+end
 for id,w in ipairs(weapons) do
  local b=UI.button(scroll,w.name,0,0,0,48,function() selected=id; refreshWeapon() end)
  b.Size=UDim2.new(1,-8,0,48); b.LayoutOrder=id; weaponRows[id]=b
@@ -109747,8 +109767,9 @@ setting("Mouse sensitivity","RiftSensitivity",1,.1,3,.1,"%.1fx")
 setting("Field of view","RiftFOV",80,60,110,5,"%.0f°")
 setting("Crosshair size","RiftCrosshair",1,.5,2,.25,"%.2fx")
 setting("Effects volume","RiftVolume",1,0,1,.1,"%.1fx")
+setting("Music volume","RiftMusicVolume",.5,0,1,.1,"%.1fx")
 text(settings,"Controls",20,true)
-hint(settings,"Aim: right mouse · Reload: R · Switch: 1 / 2 · Scoreboard: Tab · Menu: M")
+hint(settings,"Aim: right mouse · Reload: R · Switch: 1 / 2 / 3 / 4 · Scoreboard: Tab · Menu: M")
 hint(settings,"A live match keeps running while this menu is open.")
 -- The lobby shows navigation; matchmaking lives in the Play page.
 home=UI.frame(gui,"LobbyInterface",0,0,0,0); home.Size=UDim2.fromScale(1,1); home.BackgroundTransparency=1
@@ -109771,7 +109792,7 @@ refresh=function()
  queueStatus.Text=string.format("%d of %d players ready",count,size*2)
  for i,b in modeButtons do UI.select(b,i==size); b.Active=editable() end
  for i,b in kits do UI.select(b,i==(player:GetAttribute("RiftKit") or 1)); b.Active=editable() end
- loadout.Text=weapons[player:GetAttribute("RiftPrimary") or 1].name.." + "..weapons[player:GetAttribute("RiftSecondary") or 2].name
+ local names={} for slot in ipairs(weapons.Slots) do table.insert(names,slot..": "..weapons[weapons.GetId(player,slot)].short) end; loadout.Text=table.concat(names," · ")
  session.Text=string.format("%d match wins this session",player:GetAttribute("RiftMatchWins") or 0)
  objectives.Text=(practiceVisited and "✓" or "○").." Train  ·  "..(loadoutEdited and "✓" or "○").." Change loadout  ·  "..((player:GetAttribute("RiftMatchWins") or 0)&gt;0 and "✓" or "○").." Win a match"
  local all=game.Players:GetPlayers()
@@ -109781,8 +109802,8 @@ refresh=function()
  leaders.Text="Session leaders: "..table.concat(names,", ")
  refreshWeapon()
 end
-for _,attribute in {"RiftPrimary","RiftSecondary","RiftKit","RiftQueued","RiftQueueSize","RiftDuelPhase","RiftSelectedMode","RiftMatchWins"} do
- player:GetAttributeChangedSignal(attribute):Connect(function() if attribute=="RiftPrimary" or attribute=="RiftSecondary" then loadoutEdited=true end; mode=player:GetAttribute("RiftSelectedMode") or mode; refresh() end)
+for _,attribute in {"RiftPrimary","RiftSecondary","RiftPrimaryExtra","RiftSecondaryExtra","RiftKit","RiftQueued","RiftQueueSize","RiftDuelPhase","RiftSelectedMode","RiftMatchWins"} do
+ player:GetAttributeChangedSignal(attribute):Connect(function() if attribute=="RiftPrimary" or attribute=="RiftSecondary" or attribute=="RiftPrimaryExtra" or attribute=="RiftSecondaryExtra" then loadoutEdited=true end; mode=player:GetAttribute("RiftSelectedMode") or mode; refresh() end)
 end
 for size=1,3 do workspace:GetAttributeChangedSignal("RiftQueueCount"..size):Connect(refresh) end
 player:GetAttributeChangedSignal("RiftMap"):Connect(function()
@@ -110754,6 +110775,18 @@ return UI
 }
 
 weapons.Loadouts = {{1,3,5,6,7,9,10,11,12,13,14,15,19,20},{2,4,8,16,17,18}}
+weapons.Slots = {
+ {attribute="RiftPrimary",category=1,default=1,label="Primary"},
+ {attribute="RiftSecondary",category=2,default=2,label="Secondary"},
+ {attribute="RiftPrimaryExtra",category=1,default=7,label="Extra primary"},
+ {attribute="RiftSecondaryExtra",category=2,default=8,label="Extra secondary"},
+}
+function weapons.GetId(player,slot)
+ local definition=weapons.Slots[slot]
+ if not definition then return 1 end
+ local id=player:GetAttribute(definition.attribute)
+ return typeof(id)=="number" and table.find(weapons.Loadouts[definition.category],id) and id or definition.default
+end
 weapons.Kits = {
  {name="Vanguard", omitted="recon"},
  {name="Sentinel", omitted="flash"},
@@ -110790,6 +110823,9 @@ for id,weapon in ipairs(weapons) do
  weapon.description=descriptions[id]
  weapon.model=(weapon.family=="pistol" or weapon.family=="revolver") and "pistol" or "rifle"
  weapon.finish=id%3
+ if weapon.family=="rifle" or weapon.family=="marksman" or weapon.family=="lmg" then weapon.shotSound="rbxassetid://9114727430"
+ elseif weapon.family=="smg" then weapon.shotSound="rbxassetid://9114729252"
+ elseif weapon.family=="sniper" then weapon.shotSound="rbxassetid://9114727561"; weapon.soundPitch=.68 end
 end
 
 weapons.ReloadSound = "rbxassetid://117963160131194"
@@ -110836,45 +110872,15 @@ return weapons
 				<UniqueId name="UniqueId">3c83a70e7eb853630afca5dc00001627</UniqueId>
 			</Properties>
 		</Item>
-	<Item class="ModuleScript" referent="RIFT_UI_RiftTheme"><Properties><string name="Name">RiftTheme</string><ProtectedString name="Source">local remote=game.ReplicatedStorage.RiftTravel
-local last={}
-local resetCombat=script.Parent.RiftResetCombat
-local lobbySpawn=workspace.RiftLobby.LobbySpawn
-local function spawn(player,character)
- local map=workspace.RiftMaps:FindFirstChild(player:GetAttribute("RiftMap") or "")
- local name=player:GetAttribute("RiftMap")
- if map or name=="Training Arena" then
-  local root=character:WaitForChild("HumanoidRootPart",8)
-  if not root or player.Character~=character or player:GetAttribute("RiftMap")~=name then return end
-  local pos=map and map:GetAttribute("Spawn") or workspace.RiftArena:GetAttribute("Spawn") or Vector3.new(0,14,82)
-  local aim=map and map:GetAttribute("Aim") or workspace.RiftArena:GetAttribute("Aim") or Vector3.new(0,14,0)
-  character:PivotTo(CFrame.lookAt(pos,aim))
- end
-end
-local function bind(player)
- player.CharacterAdded:Connect(function(character) spawn(player,character) end)
-end
-game.Players.PlayerAdded:Connect(bind)
-for _,player in game.Players:GetPlayers() do bind(player) end
-game.Players.PlayerRemoving:Connect(function(player) last[player]=nil end)
-remote.OnServerEvent:Connect(function(player,name)
- if typeof(name)~="string" or os.clock()-(last[player] or -10)&lt;2 then return end
- local map=workspace.RiftMaps:FindFirstChild(name)
- if player:GetAttribute("RiftDuelId") or player:GetAttribute("RiftQueued") then return end
- if not map and name~="Training Arena" and name~="Lobby" then return end
- local character=player.Character
- local hum=character and character:FindFirstChildOfClass("Humanoid")
- local root=character and character:FindFirstChild("HumanoidRootPart")
- if not root or not hum or hum.Health&lt;=0 then return end
- last[player]=os.clock(); player:SetAttribute("RiftMap",name)
- local pos=map and map:GetAttribute("Spawn") or workspace.RiftArena:GetAttribute("Spawn") or Vector3.new(0,14,82)
- local aim=map and map:GetAttribute("Aim") or workspace.RiftArena:GetAttribute("Aim") or Vector3.new(0,14,0)
- local destination=CFrame.lookAt(pos,aim)
- if name=="Lobby" then destination=lobbySpawn.CFrame+Vector3.new(0,3,0) end
- character:PivotTo(destination)
- root.AssemblyLinearVelocity=Vector3.zero
- resetCombat:Fire(player)
-end)
+	<Item class="ModuleScript" referent="RIFT_UI_RiftTheme"><Properties><string name="Name">RiftTheme</string><ProtectedString name="Source">-- The only six UI color tokens. World and weapon materials are independent.
+return table.freeze({
+ background=Color3.fromRGB(26,37,48),
+ panel=Color3.fromRGB(242,245,243),
+ text=Color3.fromRGB(31,47,56),
+ accent=Color3.fromRGB(30,112,130),
+ success=Color3.fromRGB(56,130,97),
+ danger=Color3.fromRGB(190,64,64),
+})
 </ProtectedString></Properties></Item>
 <Item class="ModuleScript" referent="RIFT_UI_RiftUIController"><Properties><string name="Name">RiftUIController</string><ProtectedString name="Source">-- One owner arbitrates modals, including match voting and the scoreboard.
 local Tween=game:GetService("TweenService")
@@ -110911,6 +110917,63 @@ function Controller:Set(name,wanted)
  game.Players.LocalPlayer:SetAttribute("RiftModalOpen",best)
 end
 return Controller
+</ProtectedString></Properties></Item>
+<Item class="ModuleScript" referent="RIFT_UI_RiftAudio"><Properties><string name="Name">RiftAudio</string><ProtectedString name="Source">-- Client audio: independent effects/music buses and action-driven cues.
+local Audio={}
+local service=game:GetService("SoundService")
+local player=game.Players.LocalPlayer
+local Tween=game:GetService("TweenService")
+local Debris=game:GetService("Debris")
+Audio.Effects=service:FindFirstChild("RiftEffects") or Instance.new("SoundGroup")
+Audio.Effects.Name="RiftEffects"; Audio.Effects.Parent=service
+local musicBus=Instance.new("SoundGroup"); musicBus.Name="RiftMusic"; musicBus.Parent=service
+local function volume()
+ Audio.Effects.Volume=player:GetAttribute("RiftVolume") or 1
+ musicBus.Volume=player:GetAttribute("RiftMusicVolume") or .5
+end
+player:GetAttributeChangedSignal("RiftVolume"):Connect(volume)
+player:GetAttributeChangedSignal("RiftMusicVolume"):Connect(volume); volume()
+local sources={
+ equip={"rbxassetid://9120409666",.18,1.6},
+ reloadEnd={"rbxassetid://9120409666",.12,1.9},
+ dash={"rbxasset://sounds/action_jump.mp3",.2,1.5},
+ slide={"rbxasset://sounds/action_footsteps_plastic.mp3",.15,.85},
+ land={"rbxasset://sounds/action_footsteps_plastic.mp3",.13,.7},
+ hurt={"rbxasset://sounds/impact_water.mp3",.1,1.8},
+ round={"rbxasset://sounds/volume_slider.ogg",.16,1.7},
+ queue={"rbxasset://sounds/volume_slider.ogg",.1,1.3},
+}
+local templates={}
+for name,data in sources do
+ local s=Instance.new("Sound"); s.Name="RiftCue_"..name; s.SoundId=data[1]; s.Volume=data[2]; s.PlaybackSpeed=data[3]; s.SoundGroup=Audio.Effects; s.Parent=service; templates[name]=s
+end
+function Audio.Play(name)
+ local template=templates[name]; if not template then return end
+ local s=template:Clone(); s.Parent=service; s:Play(); Debris:AddItem(s,4)
+end
+local music=Instance.new("Sound"); music.Name="RiftLobbyMusic"; music.SoundId="rbxassetid://9042295159"; music.Looped=true; music.Volume=0; music.SoundGroup=musicBus; music.Parent=service
+local fade,generation
+local function lobbyMusic()
+ generation=(generation or 0)+1; local current=generation
+ local lobby=player:GetAttribute("RiftMap")=="Lobby" and not player:GetAttribute("RiftDuelPhase")
+ if fade then fade:Cancel() end
+ if lobby and not music.IsPlaying then music:Play() end
+ fade=Tween:Create(music,TweenInfo.new(.7,Enum.EasingStyle.Quad),{Volume=lobby and .22 or 0}); fade:Play()
+ if not lobby then task.delay(.7,function() if generation==current then music:Pause() end end) end
+end
+player:GetAttributeChangedSignal("RiftMap"):Connect(lobbyMusic)
+player:GetAttributeChangedSignal("RiftDuelPhase"):Connect(function()
+ local phase=player:GetAttribute("RiftDuelPhase")
+ if phase=="Countdown" or phase=="Fight" then Audio.Play("round") end
+ lobbyMusic()
+end)
+player:GetAttributeChangedSignal("RiftQueued"):Connect(function() Audio.Play("queue") end)
+lobbyMusic()
+task.spawn(function()
+ local preload={music}; for _,s in templates do table.insert(preload,s) end
+ pcall(function() game:GetService("ContentProvider"):PreloadAsync(preload) end)
+end)
+return Audio
 </ProtectedString></Properties></Item>
 </Item>
 	<Item class="ServerScriptService" referent="RBX25e400ec60334f34bcfd868bbdaea316">
@@ -111135,12 +111198,15 @@ local eliminated=script.Parent.RiftElimination
 local rng=Random.new()
 local S={}
 local function reset(p)
- local primary=p:GetAttribute("RiftPrimary") or 1
- local secondary=p:GetAttribute("RiftSecondary") or 2
+ local loadout,ammo={},{}
+ for slot,definition in ipairs(weapons.Slots) do
+  local id=weapons.GetId(p,slot); loadout[slot]=id; ammo[slot]=weapons[id].magazine
+  if p:GetAttribute(definition.attribute)==nil then p:SetAttribute(definition.attribute,id) end
+ end
  S[p]={
   equipped=1,
-  loadout={primary,secondary},
-  ammo={weapons[primary].magazine,weapons[secondary].magazine},
+  loadout=loadout,
+  ammo=ammo,
   nextShot=0,
   ready={},
   reload=nil,
@@ -111261,10 +111327,12 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
   if p:GetAttribute("RiftMap")~="Lobby" or p:GetAttribute("RiftQueued") or p:GetAttribute("RiftDuelId") then return end
   if action=="kit" then
    if aim==1 or aim==2 or aim==3 then p:SetAttribute("RiftKit",aim) end
-  elseif table.find(weapons.Loadouts[1],aim) then
-   p:SetAttribute("RiftPrimary",aim)
-  elseif table.find(weapons.Loadouts[2],aim) then
-   p:SetAttribute("RiftSecondary",aim)
+  else
+   local slot=expectedSlot
+   if slot==nil then slot=table.find(weapons.Loadouts[1],aim) and 1 or 2 end
+   if typeof(slot)~="number" or slot%1~=0 then return end
+   local definition=weapons.Slots[slot]
+   if definition and typeof(aim)=="number" and table.find(weapons.Loadouts[definition.category],aim) then p:SetAttribute(definition.attribute,aim) end
   end
   return
  end
@@ -111280,7 +111348,7 @@ R.OnServerEvent:Connect(function(p,action,aim,expectedSlot,aiming)
  end
  local now=os.clock()
  if action=="equip" then
-  if (aim~=1 and aim~=2) or aim==s.equipped then return end
+  if typeof(aim)~="number" or aim%1~=0 or not weapons.Slots[aim] or aim==s.equipped then return end
   s.reload=nil
   s.equipped=aim
   s.nextShot=math.max(s.nextShot,now+.2)
