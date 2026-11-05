@@ -12,7 +12,7 @@ A competitive Roblox first-person shooter combining the fast gunplay, movement, 
 - Primary and secondary loadouts with direct weapon selection and a weapon catalogue or shop interface.
 - Assault rifles, SMGs, shotguns, sniper rifles, pistols and explosives, each with a distinct role, handling, rate of fire, recoil, spread, damage, magazine and reload time.
 - Aim down sights, switching weapons, headshot multipliers, hit markers and clear damage feedback. Damage and hit detection must be validated by the server.
-- Latest balance direction: approximately 20 body shots to eliminate a 100 HP opponent. Headshots reward accuracy, and a shotgun blast's pellets share its damage.
+- Balance direction: the Vanguard Rifle needs approximately 20 body shots against 100 HP, while heavy and precision weapons hit harder. Horizon now deals 35 body / 70 head damage; launchers deal 40 indirect / 60 direct damage without stacking. A shotgun blast's pellets share its damage. See DESIGN.md for the current values.
 - Distinctive, improved weapon models and smooth firing, reload and equip animations.
 
 ## Movement and abilities
