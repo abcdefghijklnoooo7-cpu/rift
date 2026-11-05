@@ -636,9 +636,9 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 <Item class="Part" referent="RBX9cb6e22daca94e67bf7312c7015e4c2a"><Properties><string name="Name">Deck edge 4</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>96</X><Y>14.0249996</Y><Z>-55.7999992</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>22</X><Y>0.0500000007</Y><Z>0.419999987</Z></Vector3><Color3uint8 name="Color3uint8">4284655329</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties></Item>
 <Item class="Part" referent="RBX850b2a68efaa473d9dc865887706af11"><Properties><string name="Name">Movement deck 5</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>78</X><Y>11</Y><Z>-92</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>22</X><Y>2</Y><Z>15</Z></Vector3><Color3uint8 name="Color3uint8">4283787656</Color3uint8><token name="Material">816</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
 <Item class="Part" referent="RBX1793dd890df3401d8304a8c8d8b98c65"><Properties><string name="Name">Deck edge 5</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>78</X><Y>12.0249996</Y><Z>-84.8000031</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>22</X><Y>0.0500000007</Y><Z>0.419999987</Z></Vector3><Color3uint8 name="Color3uint8">4284655329</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties></Item>
-<Item class="Part" referent="RBXbce03230766340688abba112b016ea47"><Properties><string name="Name">Movement course wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>85</X><Y>19</Y><Z>66</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4280759371</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBX95514b5027e44382a6e2027411ee42ec"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>720</X><Y>160</Y></Vector2></Properties><Item class="TextLabel" referent="RBXfbb4788f268c41bd953495aa19b4da04"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>900</Weight><Style>Normal</Style></Font><string name="Text">03  /  MOVEMENT</string><Color3 name="TextColor3"><R>0.384313732</R><G>0.650980413</G><B>0.882352948</B></Color3></Properties></Item></Item></Item>
-<Item class="Part" referent="RBX3b0c95288ea84b0bbf0c3c7557e8e6a3"><Properties><string name="Name">Distance lane wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>0</X><Y>21</Y><Z>-194</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>40</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4280759371</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBXce3f4598d7b04caabc1bd513bba4f418"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>720</X><Y>160</Y></Vector2></Properties><Item class="TextLabel" referent="RBX032af651bb004cd5b29535a2d718d42a"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>900</Weight><Style>Normal</Style></Font><string name="Text">02  /  PRECISION</string><Color3 name="TextColor3"><R>0.941176474</R><G>0.745098054</G><B>0.337254912</B></Color3></Properties></Item></Item></Item>
-<Item class="Part" referent="RBX18805b096db0402b936107ea26041234"><Properties><string name="Name">Close drills wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-83</X><Y>19</Y><Z>66</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4280759371</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBX042cc6575b464d4796394a864d343752"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>720</X><Y>160</Y></Vector2></Properties><Item class="TextLabel" referent="RBX8c6f1ca8fc1d4a548f94ddfe37250819"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>900</Weight><Style>Normal</Style></Font><string name="Text">01  /  CLOSE DRILLS</string><Color3 name="TextColor3"><R>0.407843143</R><G>0.686274529</G><B>0.513725519</B></Color3></Properties></Item></Item></Item>
+<Item class="Part" referent="RBXbce03230766340688abba112b016ea47"><Properties><string name="Name">Movement course wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>85</X><Y>19</Y><Z>66</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4279376422</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBX95514b5027e44382a6e2027411ee42ec"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>1776</X><Y>240</Y></Vector2></Properties><Item class="TextLabel" referent="RBXfbb4788f268c41bd953495aa19b4da04"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font><string name="Text">Movement</string><Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3><bool name="TextWrapped">false</bool><UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2></Properties></Item></Item></Item>
+<Item class="Part" referent="RBX3b0c95288ea84b0bbf0c3c7557e8e6a3"><Properties><string name="Name">Distance lane wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>0</X><Y>21</Y><Z>-194</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>40</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4279376422</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBXce3f4598d7b04caabc1bd513bba4f418"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>1920</X><Y>240</Y></Vector2></Properties><Item class="TextLabel" referent="RBX032af651bb004cd5b29535a2d718d42a"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font><string name="Text">Precision</string><Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3><bool name="TextWrapped">false</bool><UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2></Properties></Item></Item></Item>
+<Item class="Part" referent="RBX18805b096db0402b936107ea26041234"><Properties><string name="Name">Close drills wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-83</X><Y>19</Y><Z>66</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4279376422</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBX042cc6575b464d4796394a864d343752"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>1776</X><Y>240</Y></Vector2></Properties><Item class="TextLabel" referent="RBX8c6f1ca8fc1d4a548f94ddfe37250819"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font><string name="Text">Close Range</string><Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3><bool name="TextWrapped">false</bool><UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2></Properties></Item></Item></Item>
 			<Item class="Folder" referent="RBX87eaddff468949e78aa17d3658e122ad">
 				<Properties>
 					<Color3 name="IconTint">
@@ -26912,7 +26912,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<bool name="CastShadow">true</bool>
 					<string name="CollisionGroup">Default</string>
 					<int name="CollisionGroupId">0</int>
-					<Color3uint8 name="Color3uint8">4279903281</Color3uint8>
+					<Color3uint8 name="Color3uint8">4279376422</Color3uint8>
 					<PhysicalProperties name="CustomPhysicalProperties">
 						<CustomPhysics>false</CustomPhysics>
 					</PhysicalProperties>
@@ -26979,10 +26979,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<Properties>
 						<bool name="AlwaysOnTop">false</bool>
 						<float name="Brightness">1</float>
-						<Vector2 name="CanvasSize">
-							<X>800</X>
-							<Y>600</Y>
-						</Vector2>
+						<Vector2 name="CanvasSize"><X>1480</X><Y>240</Y></Vector2>
 						<bool name="ClipsDescendants">false</bool>
 						<float name="LightInfluence">0</float>
 						<float name="MaxDistance">0</float>
@@ -27015,20 +27012,15 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					</Properties>
 					<Item class="TextLabel" referent="RBXa8fbe570f6f7497090d168cdade1b5ff">
 						<Properties>
-							<Font name="FontFace">
-								<Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family>
-								<Weight>900</Weight>
-								<Style>Normal</Style>
-								<CachedFaceId><url>rbxasset://fonts/Montserrat-Black.ttf</url></CachedFaceId>
-							</Font>
+							<Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font>
 							<float name="LineHeight">1</float>
 							<string name="LocalizationMatchIdentifier"></string>
 							<string name="LocalizationMatchedSourceText"></string>
 							<int name="MaxVisibleGraphemes">-1</int>
 							<string name="OpenTypeFeatures"></string>
 							<bool name="RichText">false</bool>
-							<string name="Text">RIFT  /  LIVE FIRE</string>
-							<Color3 name="TextColor3"><R>0.215686277</R><G>0.890196085</G><B>0.729411781</B></Color3>
+							<string name="Text">Practice Range</string>
+							<Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3>
 							<token name="TextDirection">0</token>
 							<bool name="TextScaled">true</bool>
 							<float name="TextSize">8</float>
@@ -27040,7 +27032,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">0</float>
 							<token name="TextTruncate">0</token>
-							<bool name="TextWrapped">true</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Active">false</bool>
@@ -27070,23 +27062,13 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<Ref name="NextSelectionLeft">null</Ref>
 							<Ref name="NextSelectionRight">null</Ref>
 							<Ref name="NextSelectionUp">null</Ref>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2>
 							<float name="Rotation">0</float>
 							<bool name="Selectable">false</bool>
 							<Ref name="SelectionImageObject">null</Ref>
 							<int name="SelectionOrder">0</int>
 							<token name="Sink">0</token>
-							<UDim2 name="Size">
-								<XS>1</XS>
-								<XO>0</XO>
-								<YS>1</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2>
 							<token name="SizeConstraint">0</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
@@ -27131,7 +27113,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<bool name="CastShadow">true</bool>
 					<string name="CollisionGroup">Default</string>
 					<int name="CollisionGroupId">0</int>
-					<Color3uint8 name="Color3uint8">4279903281</Color3uint8>
+					<Color3uint8 name="Color3uint8">4279376422</Color3uint8>
 					<PhysicalProperties name="CustomPhysicalProperties">
 						<CustomPhysics>false</CustomPhysics>
 					</PhysicalProperties>
@@ -27198,10 +27180,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<Properties>
 						<bool name="AlwaysOnTop">false</bool>
 						<float name="Brightness">1</float>
-						<Vector2 name="CanvasSize">
-							<X>800</X>
-							<Y>600</Y>
-						</Vector2>
+						<Vector2 name="CanvasSize"><X>1480</X><Y>240</Y></Vector2>
 						<bool name="ClipsDescendants">false</bool>
 						<float name="LightInfluence">0</float>
 						<float name="MaxDistance">0</float>
@@ -27234,20 +27213,15 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					</Properties>
 					<Item class="TextLabel" referent="RBX0fae014b558841d5b4b28136868efc7c">
 						<Properties>
-							<Font name="FontFace">
-								<Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family>
-								<Weight>900</Weight>
-								<Style>Normal</Style>
-								<CachedFaceId><url>rbxasset://fonts/Montserrat-Black.ttf</url></CachedFaceId>
-							</Font>
+							<Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font>
 							<float name="LineHeight">1</float>
 							<string name="LocalizationMatchIdentifier"></string>
 							<string name="LocalizationMatchedSourceText"></string>
 							<int name="MaxVisibleGraphemes">-1</int>
 							<string name="OpenTypeFeatures"></string>
 							<bool name="RichText">false</bool>
-							<string name="Text">RIFT  /  DEPLOY</string>
-							<Color3 name="TextColor3"><R>0.917647064</R><G>0.43921569</G><B>0.337254912</B></Color3>
+							<string name="Text">Return to Lobby</string>
+							<Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3>
 							<token name="TextDirection">0</token>
 							<bool name="TextScaled">true</bool>
 							<float name="TextSize">8</float>
@@ -27259,7 +27233,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">0</float>
 							<token name="TextTruncate">0</token>
-							<bool name="TextWrapped">true</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Active">false</bool>
@@ -27289,23 +27263,13 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<Ref name="NextSelectionLeft">null</Ref>
 							<Ref name="NextSelectionRight">null</Ref>
 							<Ref name="NextSelectionUp">null</Ref>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2>
 							<float name="Rotation">0</float>
 							<bool name="Selectable">false</bool>
 							<Ref name="SelectionImageObject">null</Ref>
 							<int name="SelectionOrder">0</int>
 							<token name="Sink">0</token>
-							<UDim2 name="Size">
-								<XS>1</XS>
-								<XO>0</XO>
-								<YS>1</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2>
 							<token name="SizeConstraint">0</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
@@ -93401,13 +93365,13 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 <Item class="Part" referent="RBX4babb5d02fe64447b828fe835b7ca3d7"><Properties><string name="Name">Terrace band</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-762</X><Y>10.5500002</Y><Z>-47</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>44</X><Y>0.119999997</Y><Z>1.20000005</Z></Vector3><Color3uint8 name="Color3uint8">4287592386</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties></Item>
 <Item class="Part" referent="RBXaa2d712391a8453590b9211996862071"><Properties><string name="Name">Bay canopy</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-762</X><Y>29</Y><Z>-26</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>44</X><Y>1.29999995</Y><Z>46</Z></Vector3><Color3uint8 name="Color3uint8">4280759371</Color3uint8><token name="Material">1088</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
 <Item class="Part" referent="RBXf1d6738db5fb47358f00eb75187b7155"><Properties><string name="Name">Bay back</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-762</X><Y>19</Y><Z>-49</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>44</X><Y>18</Y><Z>2</Z></Vector3><Color3uint8 name="Color3uint8">4282272608</Color3uint8><token name="Material">816</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
-<Item class="Part" referent="RBX352d0b9acf9f457e8f25f0b63084ba93"><Properties><string name="Name">Arsenal wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-762</X><Y>22</Y><Z>-47.7999992</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4280759371</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBXb69972a72a2141beafc9e7a6027d369b"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>720</X><Y>160</Y></Vector2></Properties><Item class="TextLabel" referent="RBX314e5b0bbfc74a7e9b9fabe81d7f3750"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>900</Weight><Style>Normal</Style></Font><string name="Text">02  /  ARSENAL</string><Color3 name="TextColor3"><R>0.56078434</R><G>0.466666669</G><B>0.760784328</B></Color3></Properties></Item></Item></Item>
+<Item class="Part" referent="RBX352d0b9acf9f457e8f25f0b63084ba93"><Properties><string name="Name">Arsenal wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-762</X><Y>22</Y><Z>-47.7999992</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4279376422</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBXb69972a72a2141beafc9e7a6027d369b"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>1776</X><Y>240</Y></Vector2></Properties><Item class="TextLabel" referent="RBX314e5b0bbfc74a7e9b9fabe81d7f3750"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font><string name="Text">Arsenal</string><Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3><bool name="TextWrapped">false</bool><UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2></Properties></Item></Item></Item>
 <Item class="Part" referent="RBXc8ddb1bb01ab4f3f8388d77331b72064"><Properties><string name="Name">Equipment counter</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-762</X><Y>12.1999998</Y><Z>-38</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>24</X><Y>3.4000001</Y><Z>3.70000005</Z></Vector3><Color3uint8 name="Color3uint8">4283787656</Color3uint8><token name="Material">1088</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
 <Item class="Part" referent="RBXf024e39ce9e4485db58f8a94e4b864df"><Properties><string name="Name">Terrace</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-638</X><Y>10.25</Y><Z>-20</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>46</X><Y>0.5</Y><Z>58</Z></Vector3><Color3uint8 name="Color3uint8">4290297542</Color3uint8><token name="Material">816</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
 <Item class="Part" referent="RBXadd4cb8dbb794f28bec5b911c6d403cd"><Properties><string name="Name">Terrace band</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-638</X><Y>10.5500002</Y><Z>-47</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>44</X><Y>0.119999997</Y><Z>1.20000005</Z></Vector3><Color3uint8 name="Color3uint8">4284655329</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties></Item>
 <Item class="Part" referent="RBX947dcfa0b3b64b5a88b2076d3eeb80e9"><Properties><string name="Name">Bay canopy</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-638</X><Y>29</Y><Z>-26</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>44</X><Y>1.29999995</Y><Z>46</Z></Vector3><Color3uint8 name="Color3uint8">4280759371</Color3uint8><token name="Material">1088</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
 <Item class="Part" referent="RBX83dc0815f2064c05b611b28b978d3f31"><Properties><string name="Name">Bay back</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-638</X><Y>19</Y><Z>-49</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>44</X><Y>18</Y><Z>2</Z></Vector3><Color3uint8 name="Color3uint8">4282272608</Color3uint8><token name="Material">816</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
-<Item class="Part" referent="RBX085cfc5cc5b54810ab443e882fb26027"><Properties><string name="Name">Range wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-638</X><Y>22</Y><Z>-47.7999992</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4280759371</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBX1079fd3bbe204008bf84e0d88d3a92c4"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>720</X><Y>160</Y></Vector2></Properties><Item class="TextLabel" referent="RBXad252b4abef64ed1abfd5be701f640c7"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>1</XS><XO>0</XO><YS>1</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>900</Weight><Style>Normal</Style></Font><string name="Text">03  /  TRAINING</string><Color3 name="TextColor3"><R>0.384313732</R><G>0.650980413</G><B>0.882352948</B></Color3></Properties></Item></Item></Item>
+<Item class="Part" referent="RBX085cfc5cc5b54810ab443e882fb26027"><Properties><string name="Name">Range wayfinding</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-638</X><Y>22</Y><Z>-47.7999992</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>37</X><Y>5</Y><Z>0.25</Z></Vector3><Color3uint8 name="Color3uint8">4279376422</Color3uint8><token name="Material">272</token><bool name="CanCollide">false</bool><bool name="CanTouch">false</bool><bool name="CanQuery">false</bool></Properties><Item class="SurfaceGui" referent="RBX1079fd3bbe204008bf84e0d88d3a92c4"><Properties><string name="Name">SurfaceGui</string><token name="Face">2</token><token name="SizingMode">0</token><Vector2 name="CanvasSize"><X>1776</X><Y>240</Y></Vector2></Properties><Item class="TextLabel" referent="RBXad252b4abef64ed1abfd5be701f640c7"><Properties><string name="Name">TextLabel</string><float name="BackgroundTransparency">1</float><bool name="TextScaled">true</bool><UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2><Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font><string name="Text">Training</string><Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3><bool name="TextWrapped">false</bool><UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2></Properties></Item></Item></Item>
 <Item class="Part" referent="RBX679e8a3f84ff4cfaba8bc4b779a59252"><Properties><string name="Name">Equipment counter</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-638</X><Y>12.1999998</Y><Z>-38</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>24</X><Y>3.4000001</Y><Z>3.70000005</Z></Vector3><Color3uint8 name="Color3uint8">4283787656</Color3uint8><token name="Material">1088</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
 <Item class="Part" referent="RBX7fe9b05f9b094a7f97703c723cef52f8"><Properties><string name="Name">Skylight crossbeam</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-700</X><Y>35</Y><Z>-52</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>178</X><Y>2</Y><Z>2.5</Z></Vector3><Color3uint8 name="Color3uint8">4283787656</Color3uint8><token name="Material">1088</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
 <Item class="Part" referent="RBX735f670eae3f4cfc8ff32cd5a8b4cec1"><Properties><string name="Name">Skylight crossbeam</string><bool name="Anchored">true</bool><token name="shape">1</token><CoordinateFrame name="CFrame"><X>-700</X><Y>35</Y><Z>8</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame><Vector3 name="size"><X>178</X><Y>2</Y><Z>2.5</Z></Vector3><Color3uint8 name="Color3uint8">4283787656</Color3uint8><token name="Material">1088</token><bool name="CanCollide">true</bool><bool name="CanTouch">false</bool><bool name="CanQuery">true</bool></Properties></Item>
@@ -97004,7 +96968,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<bool name="CastShadow">true</bool>
 					<string name="CollisionGroup">Default</string>
 					<int name="CollisionGroupId">0</int>
-					<Color3uint8 name="Color3uint8">4279508262</Color3uint8>
+					<Color3uint8 name="Color3uint8">4279376422</Color3uint8>
 					<PhysicalProperties name="CustomPhysicalProperties">
 						<CustomPhysics>false</CustomPhysics>
 					</PhysicalProperties>
@@ -97071,10 +97035,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<Properties>
 						<bool name="AlwaysOnTop">false</bool>
 						<float name="Brightness">1</float>
-						<Vector2 name="CanvasSize">
-							<X>800</X>
-							<Y>600</Y>
-						</Vector2>
+						<Vector2 name="CanvasSize"><X>1640</X><Y>240</Y></Vector2>
 						<bool name="ClipsDescendants">false</bool>
 						<float name="LightInfluence">0</float>
 						<float name="MaxDistance">0</float>
@@ -97107,20 +97068,15 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					</Properties>
 					<Item class="TextLabel" referent="RBXedcdd679bc8a46a4ac107b1107c82c84">
 						<Properties>
-							<Font name="FontFace">
-								<Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family>
-								<Weight>900</Weight>
-								<Style>Normal</Style>
-								<CachedFaceId><url>rbxasset://fonts/Montserrat-Black.ttf</url></CachedFaceId>
-							</Font>
+							<Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>700</Weight><Style>Normal</Style></Font>
 							<float name="LineHeight">1</float>
 							<string name="LocalizationMatchIdentifier"></string>
 							<string name="LocalizationMatchedSourceText"></string>
 							<int name="MaxVisibleGraphemes">-1</int>
 							<string name="OpenTypeFeatures"></string>
 							<bool name="RichText">false</bool>
-							<string name="Text">R I F T   /   D U E L S</string>
-							<Color3 name="TextColor3"><R>0.325490206</R><G>0.937254906</G><B>0.764705896</B></Color3>
+							<string name="Text">Rift Duels</string>
+							<Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3>
 							<token name="TextDirection">0</token>
 							<bool name="TextScaled">true</bool>
 							<float name="TextSize">8</float>
@@ -97132,7 +97088,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">0</float>
 							<token name="TextTruncate">0</token>
-							<bool name="TextWrapped">true</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Active">false</bool>
@@ -97162,23 +97118,13 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<Ref name="NextSelectionLeft">null</Ref>
 							<Ref name="NextSelectionRight">null</Ref>
 							<Ref name="NextSelectionUp">null</Ref>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2>
 							<float name="Rotation">0</float>
 							<bool name="Selectable">false</bool>
 							<Ref name="SelectionImageObject">null</Ref>
 							<int name="SelectionOrder">0</int>
 							<token name="Sink">0</token>
-							<UDim2 name="Size">
-								<XS>1</XS>
-								<XO>0</XO>
-								<YS>1</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2>
 							<token name="SizeConstraint">0</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
@@ -97223,7 +97169,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<bool name="CastShadow">true</bool>
 					<string name="CollisionGroup">Default</string>
 					<int name="CollisionGroupId">0</int>
-					<Color3uint8 name="Color3uint8">4279508262</Color3uint8>
+					<Color3uint8 name="Color3uint8">4279376422</Color3uint8>
 					<PhysicalProperties name="CustomPhysicalProperties">
 						<CustomPhysics>false</CustomPhysics>
 					</PhysicalProperties>
@@ -97290,10 +97236,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<Properties>
 						<bool name="AlwaysOnTop">false</bool>
 						<float name="Brightness">1</float>
-						<Vector2 name="CanvasSize">
-							<X>800</X>
-							<Y>600</Y>
-						</Vector2>
+						<Vector2 name="CanvasSize"><X>3360</X><Y>240</Y></Vector2>
 						<bool name="ClipsDescendants">false</bool>
 						<float name="LightInfluence">0</float>
 						<float name="MaxDistance">0</float>
@@ -97326,20 +97269,15 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					</Properties>
 					<Item class="TextLabel" referent="RBXc5b2ee6eb91c4645aaf4cb3f18a7bc16">
 						<Properties>
-							<Font name="FontFace">
-								<Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family>
-								<Weight>900</Weight>
-								<Style>Normal</Style>
-								<CachedFaceId><url>rbxasset://fonts/Montserrat-Black.ttf</url></CachedFaceId>
-							</Font>
+							<Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font>
 							<float name="LineHeight">1</float>
 							<string name="LocalizationMatchIdentifier"></string>
 							<string name="LocalizationMatchedSourceText"></string>
 							<int name="MaxVisibleGraphemes">-1</int>
 							<string name="OpenTypeFeatures"></string>
 							<bool name="RichText">false</bool>
-							<string name="Text">01  /  MATCHMAKING     •     M TO OPEN MENU</string>
-							<Color3 name="TextColor3"><R>0.941176474</R><G>0.745098054</G><B>0.337254912</B></Color3>
+							<string name="Text">Matchmaking  ·  Press M</string>
+							<Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3>
 							<token name="TextDirection">0</token>
 							<bool name="TextScaled">true</bool>
 							<float name="TextSize">8</float>
@@ -97351,7 +97289,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">0</float>
 							<token name="TextTruncate">0</token>
-							<bool name="TextWrapped">true</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Active">false</bool>
@@ -97381,23 +97319,13 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 							<Ref name="NextSelectionLeft">null</Ref>
 							<Ref name="NextSelectionRight">null</Ref>
 							<Ref name="NextSelectionUp">null</Ref>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2>
 							<float name="Rotation">0</float>
 							<bool name="Selectable">false</bool>
 							<Ref name="SelectionImageObject">null</Ref>
 							<int name="SelectionOrder">0</int>
 							<token name="Sink">0</token>
-							<UDim2 name="Size">
-								<XS>1</XS>
-								<XO>0</XO>
-								<YS>1</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2>
 							<token name="SizeConstraint">0</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
@@ -97697,7 +97625,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<bool name="CastShadow">true</bool>
 					<string name="CollisionGroup">Default</string>
 					<int name="CollisionGroupId">0</int>
-					<Color3uint8 name="Color3uint8">4285050755</Color3uint8>
+					<Color3uint8 name="Color3uint8">4279376422</Color3uint8>
 					<PhysicalProperties name="CustomPhysicalProperties">
 						<CustomPhysics>false</CustomPhysics>
 					</PhysicalProperties>
@@ -97764,10 +97692,7 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					<Properties>
 						<bool name="AlwaysOnTop">false</bool>
 						<float name="Brightness">1</float>
-						<Vector2 name="CanvasSize">
-							<X>800</X>
-							<Y>600</Y>
-						</Vector2>
+						<Vector2 name="CanvasSize"><X>300</X><Y>240</Y></Vector2>
 						<bool name="ClipsDescendants">false</bool>
 						<float name="LightInfluence">0</float>
 						<float name="MaxDistance">0</float>
@@ -97800,21 +97725,15 @@ zNLfaoZA///+//PAj5CH]]></BinaryString>
 					</Properties>
 					<Item class="TextLabel" referent="RBXd6fb2f95ec884c33a3f6a1b4a0eb8e7d">
 						<Properties>
-							<Font name="FontFace">
-								<Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family>
-								<Weight>900</Weight>
-								<Style>Normal</Style>
-								<CachedFaceId><url>rbxasset://fonts/Montserrat-Black.ttf</url></CachedFaceId>
-							</Font>
+							<Font name="FontFace"><Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family><Weight>500</Weight><Style>Normal</Style></Font>
 							<float name="LineHeight">1</float>
 							<string name="LocalizationMatchIdentifier"></string>
 							<string name="LocalizationMatchedSourceText"></string>
 							<int name="MaxVisibleGraphemes">-1</int>
 							<string name="OpenTypeFeatures"></string>
 							<bool name="RichText">false</bool>
-							<string name="Text">QUEUE
-MATCHES</string>
-							<Color3 name="TextColor3"><R>0.325490206</R><G>0.937254906</G><B>0.764705896</B></Color3>
+							<string name="Text">Play</string>
+							<Color3 name="TextColor3"><R>0.921568627</R><G>0.945098039</G><B>0.972549020</B></Color3>
 							<token name="TextDirection">0</token>
 							<bool name="TextScaled">true</bool>
 							<float name="TextSize">8</float>
@@ -97826,7 +97745,7 @@ MATCHES</string>
 							<float name="TextStrokeTransparency">1</float>
 							<float name="TextTransparency">0</float>
 							<token name="TextTruncate">0</token>
-							<bool name="TextWrapped">true</bool>
+							<bool name="TextWrapped">false</bool>
 							<token name="TextXAlignment">2</token>
 							<token name="TextYAlignment">1</token>
 							<bool name="Active">false</bool>
@@ -97856,23 +97775,13 @@ MATCHES</string>
 							<Ref name="NextSelectionLeft">null</Ref>
 							<Ref name="NextSelectionRight">null</Ref>
 							<Ref name="NextSelectionUp">null</Ref>
-							<UDim2 name="Position">
-								<XS>0</XS>
-								<XO>0</XO>
-								<YS>0</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Position"><XS>0.05</XS><XO>0</XO><YS>0.19</YS><YO>0</YO></UDim2>
 							<float name="Rotation">0</float>
 							<bool name="Selectable">false</bool>
 							<Ref name="SelectionImageObject">null</Ref>
 							<int name="SelectionOrder">0</int>
 							<token name="Sink">0</token>
-							<UDim2 name="Size">
-								<XS>1</XS>
-								<XO>0</XO>
-								<YS>1</YS>
-								<YO>0</YO>
-							</UDim2>
+							<UDim2 name="Size"><XS>0.9</XS><XO>0</XO><YS>0.62</YS><YO>0</YO></UDim2>
 							<token name="SizeConstraint">0</token>
 							<bool name="Visible">true</bool>
 							<int name="ZIndex">1</int>
