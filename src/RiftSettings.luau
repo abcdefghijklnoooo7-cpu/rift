@@ -97,7 +97,7 @@ text(play,"Practice",20,true)
 button(play,"Enter training",function() leaveFor("Training Arena") end)
 local loadout=hint(play,"")
 button(play,"Change loadout",function() showPage("Arsenal") end)
-for _,destination in {"Pine Ridge","Red Mesa","Metro District","Dockyard"} do
+for _,destination in {"Pine Ridge","Red Mesa","Metro District","Dockyard","Switchyard","Canyon Crossing","Old Town"} do
  button(play,"Explore "..destination,function() leaveFor(destination) end)
 end
 text(play,"Your session",20,true)

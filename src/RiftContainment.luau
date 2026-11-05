@@ -11,8 +11,8 @@ local function region(player)
  end
  local name=player:GetAttribute('RiftMap')
  if name=='Training Arena' then return workspace.RiftArena,workspace.RiftArena:GetAttribute('Spawn') or Vector3.new(0,14,110),0,-257,151 end
- local map=name and workspace.RiftMaps:FindFirstChild(name)
- if map then local spawn=map:GetAttribute('Spawn');return map,spawn,spawn.X,-139,139 end
+ local map=name and (workspace.RiftMaps:FindFirstChild(name) or workspace.RiftDuels:FindFirstChild(name))
+ if map then local spawn=map:GetAttribute('Spawn') or map:GetAttribute('SpawnA');if spawn then return map,spawn,spawn.X,-139,139 end end
 end
 Run.Heartbeat:Connect(function(dt)
  elapsed+=dt;if elapsed<.2 then return end;elapsed=0
